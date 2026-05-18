@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Модели — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.fam{padding:22px;border-radius:14px;background:var(--d-card-bg);border:1px solid var(--d-border)}
+.fam h3{display:flex;align-items:center;gap:10px}
+.fam h3 img{width:24px;height:24px;border-radius:5px}
+.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px}
+.m-card{position:relative;padding:14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--d-border)}
+.m-card .id{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--d-muted);margin-top:3px}
+.m-tag{display:inline-block;padding:2px 8px;border-radius:5px;background:rgba(255,255,255,.08);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--d-muted);margin-top:8px}
+.m-card.m-coming{opacity:.55;filter:grayscale(.4)}
+.m-card.m-coming::after{content:"Coming soon";position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:6px;background:linear-gradient(135deg,#7d6cff,#b76cff);color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 4px 14px rgba(125,108,255,.35)}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">API</div><h1 class="d-page-title">Модели</h1>
+      <div class="d-page-sub">Каталог поддерживаемых моделей.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <div id="modelsBox" style="display:grid;gap:18px"><div class="d-empty">Загрузка…</div></div>
+
+  <section class="d-card" style="margin-top:24px">
+    <h3>Базовый URL</h3>
+    <div class="desc">OpenAI-совместимый и Anthropic-совместимый эндпоинты.</div>
+    <div style="margin-top:12px;font-size:13px;line-height:1.8">
+      <div>📡 <span class="d-code">https://api.scarlex.ru</span></div>
+    </div>
+  </section>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+SCX.boot('models', function(){
+  SCX.api('/api/models.php').then(function(d){
+    if (!d || !d.ok) return;
+    var fams = d.models || [];
+    document.getElementById('modelsBox').innerHTML = fams.map(function(f){
+      return '<div class="fam"><h3><img src="/'+SCX.escapeHtml(f.logo)+'" alt="" onerror="this.style.display=\'none\'">'+SCX.escapeHtml(f.family)+'</h3>'
+        + '<div class="m-grid">' + (f.items||[]).map(function(m){
+            return '<div class="m-card'+(m.coming?' m-coming':'')+'"><div style="font-weight:700;color:var(--d-white)">'+SCX.escapeHtml(m.name)+'</div>'
+              + '<div class="id">'+SCX.escapeHtml(m.id)+'</div>'
+              + '<div style="font-size:12px;color:var(--d-muted);margin-top:6px">Контекст: '+(m.context||0).toLocaleString('ru-RU')+' токенов</div>'
+              + (m.tag?'<span class="m-tag">'+SCX.escapeHtml(m.tag)+'</span>':'') + '</div>';
+          }).join('') + '</div></div>';
+    }).join('');
+  });
+});
+</script>
+</body></html>

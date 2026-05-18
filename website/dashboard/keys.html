@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Ключи — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.k-card{padding:20px;border-radius:14px;background:var(--d-card-bg);border:1px solid var(--d-border);display:flex;flex-direction:column;gap:12px}
+.k-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.k-name{font-weight:700;color:var(--d-white);font-size:15px}
+.k-key{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--d-muted);margin-top:4px;cursor:pointer}
+.k-bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.k-bar>span{display:block;height:100%;background:var(--d-white)}
+.k-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--d-muted)}
+.k-actions{display:flex;flex-wrap:wrap;gap:6px}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">API</div><h1 class="d-page-title">Мои ключи</h1>
+      <div class="d-page-sub">Управляй API-ключами и пополняй их токенами.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px">
+    <a class="d-btn primary" href="/dashboard/market.html">+ Купить ключ</a>
+    <button class="d-btn" id="btnTrial">Получить бесплатный тестовый</button>
+    <button class="d-btn" id="btnImport">Импортировать существующий</button>
+  </section>
+
+  <div id="keysBox" class="d-grid d-grid-3"><div class="d-empty">Загрузка…</div></div>
+</main>
+
+<!-- Topup modal -->
+<div class="d-modal-bg" id="mTopup"><div class="d-modal">
+  <button class="d-modal-close" data-close>✕</button>
+  <h3>Пополнить ключ</h3>
+  <div class="desc" id="mTopupKeyName" style="color:var(--d-muted);margin-bottom:14px"></div>
+  <div class="d-label">Объём токенов</div>
+  <input type="range" class="d-slider" id="mSlider" min="0" max="1000" step="1" value="20">
+  <div style="position:relative;height:18px;margin-top:6px;font-size:11px;color:var(--d-muted)">
+    <span style="position:absolute;left:0%">1M</span>
+    <span style="position:absolute;left:18%;transform:translateX(-50%)">100M</span>
+    <span style="position:absolute;left:49.8%;transform:translateX(-50%)">250M</span>
+    <span style="position:absolute;left:90%;transform:translateX(-50%);color:var(--d-warn)">500M</span>
+    <span style="position:absolute;left:92.2%;transform:translateX(-50%);color:var(--d-warn);opacity:.6">1B</span>
+    <span style="position:absolute;right:0%">5B</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span><b id="mTokens">10M</b> токенов</span><span>≈ <b id="mPrice">— ₽</b></span></div>
+  <div style="font-size:12px;color:var(--d-muted);margin-top:4px"><span id="mPer1m">—</span> ₽ за 1M</div>
+  <div id="mTier" style="font-size:12px;color:var(--d-muted);margin-top:6px"></div>
+  <div id="mEnt" style="display:none;padding:12px;border-radius:10px;background:rgba(255,206,90,.08);border:1px solid rgba(255,206,90,.25);margin-top:14px">
+    <div style="font-weight:700;color:var(--d-warn);font-size:13px;margin-bottom:4px">⚡ Цена по договорённости</div>
+    <div style="font-size:12.5px;color:var(--d-muted);line-height:1.55">Объёмы свыше 500M — индивидуальный расчёт. Свяжись с поддержкой.</div>
+    <a class="d-btn primary" id="mEntBtn" target="_blank" rel="noopener" style="margin-top:10px;display:inline-block">Связаться в Telegram</a>
+  </div>
+  <button class="d-btn primary" id="mTopupGo" style="margin-top:18px;width:100%">Пополнить</button>
+</div></div>
+
+<!-- Import modal -->
+<div class="d-modal-bg" id="mImport"><div class="d-modal">
+  <button class="d-modal-close" data-close>✕</button>
+  <h3>Импорт ключа</h3>
+  <div class="desc" style="color:var(--d-muted);margin-bottom:14px">Привяжи существующий API-ключ к аккаунту.</div>
+  <div class="d-label">Ключ</div><input class="d-input" id="impKey" placeholder="sk-scarlex-…">
+  <div class="d-label" style="margin-top:12px">Название (необязательно)</div><input class="d-input" id="impLabel">
+  <button class="d-btn primary" id="impGo" style="margin-top:18px;width:100%">Привязать</button>
+</div></div>
+
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+var CUSTOM_RANGE = {min:1000000, max:5000000000, quote_max:500000000, contact_url:'https://t.me/scarlex_support'};
+var ANCHORS = [];
+
+function fmtTokensShort(n){
+  if (n >= 1000000000) return (n/1000000000).toFixed(n%1000000000?1:0)+'B';
+  if (n >= 1000000) return Math.round(n/1000000)+'M';
+  return n;
+}
+function calcPriceLocal(tokens){
+  if (tokens > CUSTOM_RANGE.quote_max) return {contact:true, contact_url:CUSTOM_RANGE.contact_url};
+  if (!ANCHORS.length) {
+    var per = 19; return {contact:false, price_rub:+(per*tokens/1e6).toFixed(2), per_1m:per, tier:null};
+  }
+  var tier = ANCHORS[0];
+  for (var i=0;i<ANCHORS.length;i++) if (tokens >= ANCHORS[i].tokens) tier = ANCHORS[i];
+  var per = tier.per_1m;
+  var price = +(per * tokens / 1e6).toFixed(2);
+  var next = null;
+  for (var j=0;j<ANCHORS.length;j++) if (ANCHORS[j].tokens > tokens) { next = ANCHORS[j]; break; }
+  if (next && price > next.price_rub) { price = +next.price_rub; per = +(price/(tokens/1e6)).toFixed(4); }
+  return {contact:false, price_rub:price, per_1m:per, tier:{tokens:tier.tokens, per_1m:tier.per_1m}};
+}
+function mSliderTokens(){
+  var v = +document.getElementById('mSlider').value;
+  if (v <= 900) { return Math.round(1 + (v/900)*(500-1)) * 1000000; }
+  return Math.round(500 + ((v-900)/100)*(5000-500)) * 1000000;
+}
+function tokensToMSlider(t){
+  var m = t/1000000;
+  if (m <= 500) return Math.round((m-1)/499 * 900);
+  return 900 + Math.round((m-500)/4500 * 100);
+}
+
+function pctBar(p){ return Math.min(100, Math.max(0, p)); }
+
+function renderKeys(keys, baseUrl){
+  if (!keys.length) { document.getElementById('keysBox').innerHTML = '<div class="d-empty">У тебя пока нет ключей. <a href="/dashboard/market.html" style="color:var(--d-white);text-decoration:underline">Купить</a></div>'; return; }
+  var html = keys.map(function(k){
+    var pct = k.usage_percent || 0;
+    var statusPill = !k.is_active ? '<span class="d-pill err">Неактивен</span>'
+      : k.is_frozen ? '<span class="d-pill warn">Заморожен</span>'
+      : k.is_test ? '<span class="d-pill ok">Trial</span>'
+      : '<span class="d-pill ok">Активен</span>';
+    return '<div class="k-card">'
+      + '<div class="k-head"><div><div class="k-name"><a href="/dashboard/key.html?id='+k.id+'" style="color:var(--d-white);text-decoration:none">'+SCX.escapeHtml(k.label||'Без названия')+'</a> '+statusPill+'</div>'
+      + '<div class="k-key" data-key="'+SCX.escapeHtml(k.key_value)+'" title="Копировать">'+SCX.escapeHtml(k.masked)+' 📋</div></div></div>'
+      + '<div><div class="k-bar"><span style="width:'+pctBar(pct)+'%"></span></div>'
+      + '<div class="k-meta" style="margin-top:6px"><span>'+SCX.fmtTokens(k.used_tokens)+' / '+SCX.fmtTokens(k.tokens_limit)+'</span><span>'+pct.toFixed(1)+'%</span></div></div>'
+      + '<div class="k-actions">'
+      +   '<a class="d-btn sm" href="/dashboard/key.html?id='+k.id+'">Графики</a>'
+      +   '<button class="d-btn sm" data-act="topup" data-id="'+k.id+'" data-name="'+SCX.escapeHtml(k.label||'Ключ')+'">'+(k.is_test?'Пополнить (превратить в обычный)':'Пополнить')+'</button>'
+      +   '<button class="d-btn sm" data-act="rename" data-id="'+k.id+'" data-name="'+SCX.escapeHtml(k.label||'')+'">Переименовать</button>'
+      +   (k.is_frozen
+            ? '<button class="d-btn sm" data-act="unfreeze" data-id="'+k.id+'">Разморозить</button>'
+            : '<button class="d-btn sm" data-act="freeze" data-id="'+k.id+'">Заморозить</button>')
+      +   (k.is_test ? '' : '<button class="d-btn sm danger" data-act="refund" data-id="'+k.id+'">Вернуть</button>')
+      +   '<button class="d-btn sm danger" data-act="delete" data-id="'+k.id+'">Удалить</button>'
+      + '</div></div>';
+  }).join('');
+  document.getElementById('keysBox').innerHTML = html;
+  bindActions();
+}
+
+function bindActions(){
+  document.querySelectorAll('.k-key').forEach(function(el){
+    el.onclick = function(){
+      navigator.clipboard.writeText(el.dataset.key); SCX.toast('Ключ скопирован');
+    };
+  });
+  document.querySelectorAll('[data-act]').forEach(function(b){
+    b.onclick = function(){
+      var id = +b.dataset.id, act = b.dataset.act, name = b.dataset.name || '';
+      if (act === 'delete') { if (!confirm('Удалить ключ из списка?')) return;
+        SCX.api('/api/keys.php', {action:'delete', id:id}).then(function(){ load(); }); return; }
+      if (act === 'freeze' || act === 'unfreeze') {
+        SCX.api('/api/keys.php', {action:act, id:id}).then(function(r){ if(r.ok){load(); SCX.toast('Готово');} else SCX.toast(r.error||'Ошибка'); }); return;
+      }
+      if (act === 'rename') {
+        var nl = prompt('Новое название:', name); if (nl===null) return;
+        SCX.api('/api/keys.php', {action:'rename', id:id, label:nl}).then(function(r){ if(r.ok){load(); SCX.toast('Сохранено');} else SCX.toast(r.error||'Ошибка'); }); return;
+      }
+      if (act === 'refund') {
+        if (!confirm('Запросить возврат остатка на баланс? Ключ будет деактивирован.')) return;
+        SCX.api('/api/keys.php', {action:'refund', id:id}).then(function(r){ if(r.ok){SCX.toast('Возврат: '+r.refund_rub+' ₽'); load();} else SCX.toast(r.error||'Ошибка'); }); return;
+      }
+      if (act === 'topup') openTopup(id, name);
+    };
+  });
+}
+
+function load(){
+  SCX.api('/api/keys.php?action=list').then(function(d){
+    if (!d || !d.ok) { document.getElementById('keysBox').innerHTML = '<div class="d-empty">Ошибка</div>'; return; }
+    renderKeys(d.keys || [], d.base_url);
+  });
+}
+
+// ── Topup modal ──
+var topupKeyId = null;
+function openTopup(id, name){
+  topupKeyId = id;
+  document.getElementById('mTopupKeyName').textContent = name;
+  document.getElementById('mTopup').classList.add('show');
+  updateTopupPrice();
+}
+function updateTopupPrice(){
+  var tokens = mSliderTokens();
+  document.getElementById('mTokens').textContent = fmtTokensShort(tokens);
+  var r = calcPriceLocal(tokens);
+  var ent = document.getElementById('mEnt');
+  var note = document.getElementById('mTier');
+  var go = document.getElementById('mTopupGo');
+  if (r.contact) {
+    document.getElementById('mPrice').textContent = '— ₽';
+    document.getElementById('mPer1m').textContent = '—';
+    note.innerHTML = '';
+    ent.style.display = 'block';
+    document.getElementById('mEntBtn').href = r.contact_url || CUSTOM_RANGE.contact_url;
+    go.disabled = true; go.textContent = 'Цена по договорённости';
+  } else {
+    document.getElementById('mPrice').textContent = SCX.fmtRub(r.price_rub) + ' ₽';
+    document.getElementById('mPer1m').textContent = (+r.per_1m).toFixed(2);
+    ent.style.display = 'none';
+    go.disabled = false; go.textContent = 'Пополнить';
+    if (r.tier) {
+      note.innerHTML = 'Ступень: <b>от '+fmtTokensShort(r.tier.tokens)+'</b> · <b>'+(+r.tier.per_1m).toFixed(2)+' ₽/1M</b>';
+    } else { note.innerHTML = ''; }
+  }
+}
+document.getElementById('mSlider').addEventListener('input', updateTopupPrice);
+document.getElementById('mTopupGo').onclick = function(){
+  var tokens = mSliderTokens();
+  if (tokens > CUSTOM_RANGE.quote_max) {
+    window.open(CUSTOM_RANGE.contact_url, '_blank'); return;
+  }
+  SCX.api('/api/buy_key.php', {action:'topup_key', key_id:topupKeyId, tokens:tokens}).then(function(r){
+    if (r && r.ok) {
+      SCX.toast('+' + SCX.fmtTokens(r.added_tokens) + ' токенов');
+      document.getElementById('mTopup').classList.remove('show');
+      load();
+    } else if (r && r.contact) {
+      window.open(r.contact_url || CUSTOM_RANGE.contact_url, '_blank');
+    } else SCX.toast(r && r.error || 'Ошибка');
+  });
+};
+
+// ── Import modal ──
+document.getElementById('btnImport').onclick = function(){ document.getElementById('mImport').classList.add('show'); };
+document.getElementById('impGo').onclick = function(){
+  var key = document.getElementById('impKey').value.trim();
+  if (!key) return SCX.toast('Введи ключ');
+  SCX.api('/api/keys.php', {action:'add', key_value:key, label:document.getElementById('impLabel').value.trim()}).then(function(r){
+    if (r && r.ok) { SCX.toast('Ключ привязан'); document.getElementById('mImport').classList.remove('show'); load(); }
+    else SCX.toast(r && r.error || 'Ошибка');
+  });
+};
+
+// ── Trial ──
+document.getElementById('btnTrial').onclick = function(){
+  if (!confirm('Получить бесплатный тестовый ключ на 1M токенов? Только один раз на аккаунт.')) return;
+  SCX.api('/api/keys.php', {action:'test_key'}).then(function(r){
+    if (r && r.ok) { SCX.toast('Тестовый ключ создан'); load(); }
+    else SCX.toast(r && r.error || 'Ошибка');
+  });
+};
+
+// Close modals
+document.querySelectorAll('[data-close]').forEach(function(b){ b.onclick = function(){ b.closest('.d-modal-bg').classList.remove('show'); }; });
+document.querySelectorAll('.d-modal-bg').forEach(function(bg){ bg.addEventListener('click', function(e){ if (e.target===bg) bg.classList.remove('show'); }); });
+
+SCX.boot('keys', function(){
+  load();
+  document.getElementById('mSlider').value = tokensToMSlider(10000000);
+  SCX.api('/api/buy_key.php?action=products').then(function(d){
+    if (d && d.ok) {
+      ANCHORS = (d.products || [])
+        .filter(function(p){ return !p.is_trial && p.allow_custom !== false && p.tokens > 0 && p.price_rub > 0; })
+        .map(function(p){ return {tokens:+p.tokens, price_rub:+p.price_rub, per_1m:+p.price_per_1m}; })
+        .sort(function(a,b){ return a.tokens - b.tokens; });
+      if (d.custom) {
+        CUSTOM_RANGE = {
+          min: d.custom.min,
+          max: d.custom.max,
+          quote_max: d.custom.quote_max || 500000000,
+          contact_url: d.custom.contact_url || 'https://t.me/scarlex_support'
+        };
+      }
+      document.getElementById('mEntBtn').href = CUSTOM_RANGE.contact_url;
+    }
+  });
+});
+</script>
+</body></html>

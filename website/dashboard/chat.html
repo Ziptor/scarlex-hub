@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Чат — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--d-border)}
+.tab{padding:10px 16px;font-size:13px;font-weight:600;color:var(--d-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.is-active{color:var(--d-white);border-color:var(--d-white)}
+.tab-pane{display:none}.tab-pane.is-active{display:block}
+
+.t-list{border-right:1px solid var(--d-border);overflow-y:auto;max-height:560px}
+.t-item{padding:13px 14px;border-bottom:1px solid var(--d-border);cursor:pointer;transition:background .2s}
+.t-item:hover{background:rgba(255,255,255,.03)}
+.t-item.is-active{background:rgba(255,255,255,.06)}
+.t-item .sub{font-weight:600;color:var(--d-white);font-size:13.5px;margin-bottom:3px}
+.t-item .meta{font-size:11.5px;color:var(--d-muted)}
+
+.msgs{padding:14px 18px;overflow-y:auto;max-height:460px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.55}
+.msg.user{align-self:flex-end;background:var(--d-white);color:var(--d-bg)}
+.msg.admin{align-self:flex-start;background:rgba(255,255,255,.06);color:var(--d-text);border:1px solid var(--d-border)}
+.msg .when{display:block;font-size:10.5px;opacity:.6;margin-top:4px}
+
+.ai-chat{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow-y:auto;padding:14px;background:rgba(255,255,255,.02);border-radius:10px;border:1px solid var(--d-border);min-height:300px}
+.ai-msg{padding:11px 14px;border-radius:11px;font-size:13.5px;line-height:1.6;white-space:pre-wrap;max-width:88%}
+.ai-msg.user{align-self:flex-end;background:var(--d-white);color:var(--d-bg)}
+.ai-msg.bot{align-self:flex-start;background:rgba(255,255,255,.04);border:1px solid var(--d-border);color:var(--d-text)}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">Поддержка</div><h1 class="d-page-title">Чат</h1>
+      <div class="d-page-sub">Тикеты в поддержку или быстрая проверка модели.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <div class="tabs">
+    <div class="tab is-active" data-t="support">Поддержка</div>
+    <div class="tab" data-t="ai">Тест модели</div>
+  </div>
+
+  <div class="tab-pane is-active" data-t="support">
+    <section class="d-card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:280px 1fr;min-height:560px">
+        <div>
+          <div style="padding:14px 14px 8px;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700;color:var(--d-white)">Тикеты</div>
+            <button class="d-btn sm primary" id="btnNew">+ Новый</button>
+          </div>
+          <div class="t-list" id="tList"><div class="d-empty">Загрузка…</div></div>
+        </div>
+        <div style="border-left:1px solid var(--d-border);display:flex;flex-direction:column">
+          <div id="tHead" style="padding:14px 18px;border-bottom:1px solid var(--d-border);font-weight:700;color:var(--d-white)">Выбери тикет</div>
+          <div class="msgs" id="tMsgs" style="flex:1"><div class="d-empty" style="margin:auto">Тикет не выбран</div></div>
+          <div id="tReply" style="display:none;padding:12px 14px;border-top:1px solid var(--d-border)">
+            <textarea class="d-textarea" id="tReplyText" placeholder="Сообщение…" style="min-height:60px"></textarea>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+              <button class="d-btn sm danger" id="tCloseBtn">Закрыть тикет</button>
+              <button class="d-btn sm primary" id="tReplyBtn">Отправить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="tab-pane" data-t="ai">
+    <section class="d-card">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
+        <div style="flex:1;min-width:200px"><div class="d-label">API-ключ</div>
+          <select class="d-select" id="aiKey"><option>—</option></select></div>
+        <div style="flex:1;min-width:180px"><div class="d-label">Модель</div>
+          <select class="d-select" id="aiModel">
+            <option>claude-haiku-4.5</option>
+            <option selected>claude-sonnet-4.6</option>
+            <option>claude-sonnet-4.5</option>
+            <option>claude-opus-4.6</option>
+            <option>claude-opus-4.7</option>
+          </select></div>
+        <button class="d-btn danger sm" id="aiClear">Очистить</button>
+      </div>
+
+      <div class="ai-chat" id="aiBox"><div class="d-empty" style="margin:auto">Задай вопрос модели</div></div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <textarea class="d-textarea" id="aiInput" placeholder="Сообщение… Enter — отправить, Shift+Enter — новая строка" style="min-height:60px"></textarea>
+        <button class="d-btn primary" id="aiSend" style="align-self:stretch">Отправить</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- New ticket modal -->
+<div class="d-modal-bg" id="mNew"><div class="d-modal">
+  <button class="d-modal-close" data-close>✕</button>
+  <h3>Новый тикет</h3>
+  <div class="d-label">Тема</div><input class="d-input" id="nSub" maxlength="200">
+  <div class="d-label" style="margin-top:12px">Сообщение</div><textarea class="d-textarea" id="nBody" style="min-height:140px"></textarea>
+  <button class="d-btn primary" id="nGo" style="margin-top:18px;width:100%">Создать тикет</button>
+</div></div>
+
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+var CUR_TID = null;
+var AI_HISTORY = [];
+
+function loadTickets(){
+  SCX.api('/api/support.php?action=list').then(function(d){
+    if (!d || !d.ok) return;
+    var arr = d.tickets || [];
+    if (!arr.length) { document.getElementById('tList').innerHTML = '<div class="d-empty">Тикетов нет</div>'; return; }
+    document.getElementById('tList').innerHTML = arr.map(function(t){
+      var stat = t.status==='closed'?'<span class="d-pill">Закрыт</span>':(t.status==='waiting'?'<span class="d-pill warn">Ждём вас</span>':'<span class="d-pill ok">Открыт</span>');
+      return '<div class="t-item" data-id="'+t.id+'"><div class="sub">'+SCX.escapeHtml(t.subject)+'</div><div class="meta">'+stat+' · '+t.msg_count+' сооб. · '+SCX.fmtDate(t.updated_at)+'</div></div>';
+    }).join('');
+    document.querySelectorAll('.t-item').forEach(function(el){
+      el.onclick = function(){ openTicket(+el.dataset.id); document.querySelectorAll('.t-item').forEach(function(x){x.classList.toggle('is-active', x===el);}); };
+    });
+  });
+}
+
+function openTicket(id){
+  CUR_TID = id;
+  document.getElementById('tReply').style.display = 'block';
+  SCX.api('/api/support.php?action=get&id=' + id).then(function(d){
+    if (!d || !d.ok) return;
+    document.getElementById('tHead').textContent = d.ticket.subject + (d.ticket.status==='closed'?' (закрыт)':'');
+    document.getElementById('tMsgs').innerHTML = (d.messages || []).map(function(m){
+      return '<div class="msg '+m.sender+'">'+SCX.escapeHtml(m.body).replace(/\n/g,'<br>')+'<span class="when">'+SCX.fmtDate(m.created_at)+'</span></div>';
+    }).join('') || '<div class="d-empty" style="margin:auto">Сообщений нет</div>';
+    var box = document.getElementById('tMsgs'); box.scrollTop = box.scrollHeight;
+    document.getElementById('tReply').style.display = (d.ticket.status === 'closed') ? 'none' : 'block';
+  });
+}
+
+document.getElementById('tReplyBtn').onclick = function(){
+  var b = document.getElementById('tReplyText').value.trim();
+  if (!b || !CUR_TID) return;
+  SCX.api('/api/support.php', {action:'reply', ticket_id:CUR_TID, body:b}).then(function(r){
+    if (r && r.ok) { document.getElementById('tReplyText').value = ''; openTicket(CUR_TID); loadTickets(); }
+    else SCX.toast(r && r.error || 'Ошибка');
+  });
+};
+document.getElementById('tCloseBtn').onclick = function(){
+  if (!CUR_TID || !confirm('Закрыть тикет?')) return;
+  SCX.api('/api/support.php', {action:'close', ticket_id:CUR_TID}).then(function(){ openTicket(CUR_TID); loadTickets(); });
+};
+
+document.getElementById('btnNew').onclick = function(){ document.getElementById('mNew').classList.add('show'); };
+document.getElementById('nGo').onclick = function(){
+  var sub = document.getElementById('nSub').value.trim(), body = document.getElementById('nBody').value.trim();
+  if (!sub || !body) return SCX.toast('Заполни тему и сообщение');
+  SCX.api('/api/support.php', {action:'create', subject:sub, body:body}).then(function(r){
+    if (r && r.ok) {
+      document.getElementById('mNew').classList.remove('show');
+      document.getElementById('nSub').value = ''; document.getElementById('nBody').value = '';
+      loadTickets(); openTicket(r.ticket_id);
+    } else SCX.toast(r && r.error || 'Ошибка');
+  });
+};
+
+document.querySelectorAll('[data-close]').forEach(function(b){ b.onclick = function(){ b.closest('.d-modal-bg').classList.remove('show'); }; });
+document.querySelectorAll('.d-modal-bg').forEach(function(bg){ bg.addEventListener('click', function(e){ if (e.target===bg) bg.classList.remove('show'); }); });
+
+// ── AI chat tester ──
+function loadAiKeys(){
+  SCX.api('/api/keys.php?action=list').then(function(d){
+    if (!d || !d.ok) return;
+    var sel = document.getElementById('aiKey');
+    sel.innerHTML = (d.keys || []).filter(function(k){ return k.is_active && !k.is_frozen; }).map(function(k){
+      return '<option value="'+SCX.escapeHtml(k.key_value)+'">'+SCX.escapeHtml(k.label||'Ключ')+' · '+SCX.fmtTokens(k.tokens_limit - k.used_tokens)+' свободно</option>';
+    }).join('') || '<option value="">Нет активных ключей</option>';
+  });
+}
+
+function renderAi(){
+  var box = document.getElementById('aiBox');
+  if (!AI_HISTORY.length) { box.innerHTML = '<div class="d-empty" style="margin:auto">Задай вопрос модели</div>'; return; }
+  box.innerHTML = AI_HISTORY.map(function(m){
+    return '<div class="ai-msg '+m.role+'">'+SCX.escapeHtml(m.content)+'</div>';
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+document.getElementById('aiClear').onclick = function(){ AI_HISTORY = []; renderAi(); };
+document.getElementById('aiInput').addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('aiSend').click(); }
+});
+document.getElementById('aiSend').onclick = function(){
+  var key = document.getElementById('aiKey').value;
+  var model = document.getElementById('aiModel').value;
+  var inp = document.getElementById('aiInput');
+  var text = inp.value.trim();
+  if (!key) return SCX.toast('Выбери ключ');
+  if (!text) return;
+  AI_HISTORY.push({role:'user', content:text});
+  inp.value = '';
+  AI_HISTORY.push({role:'bot', content:'…'});
+  renderAi();
+
+  fetch('https://api.scarlex.ru/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body: JSON.stringify({
+      model: model,
+      messages: AI_HISTORY.slice(0, -1).map(function(m){ return {role: m.role==='bot'?'assistant':'user', content:m.content}; })
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    AI_HISTORY.pop();
+    if (d && d.choices && d.choices[0]) {
+      AI_HISTORY.push({role:'bot', content:d.choices[0].message.content});
+    } else {
+      AI_HISTORY.push({role:'bot', content:'⚠ '+(d && (d.error && d.error.message || JSON.stringify(d)) || 'Ошибка')});
+    }
+    renderAi();
+  }).catch(function(e){
+    AI_HISTORY.pop();
+    AI_HISTORY.push({role:'bot', content:'⚠ '+e.message});
+    renderAi();
+  });
+};
+
+SCX.boot('chat', function(){
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.onclick = function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('is-active', x===t); });
+      document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.toggle('is-active', p.dataset.t===t.dataset.t); });
+      if (t.dataset.t === 'ai') loadAiKeys();
+    };
+  });
+  loadTickets();
+});
+</script>
+</body></html>

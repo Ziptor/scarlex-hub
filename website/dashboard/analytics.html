@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Аналитика — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">API</div><h1 class="d-page-title">Аналитика</h1>
+      <div class="d-page-sub">Расход, прогнозы и разрез по моделям.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section class="d-grid d-grid-3" style="margin-bottom:20px">
+    <div class="d-card d-stat"><div class="lbl">Запросов / 30д</div><div class="val" id="aReq">—</div></div>
+    <div class="d-card d-stat"><div class="lbl">Токенов / 30д</div><div class="val" id="aTok">—</div></div>
+    <div class="d-card d-stat"><div class="lbl">Потрачено / 30д</div><div class="val" id="aSpent">— ₽</div></div>
+  </section>
+
+  <section class="d-grid d-grid-2" style="margin-bottom:20px">
+    <div class="d-card">
+      <h3>Burn rate</h3>
+      <div class="desc">Прогноз исчерпания баланса.</div>
+      <div style="margin-top:14px"><div style="font-size:13px;color:var(--d-muted)">Средний расход / день</div>
+        <div style="font-size:24px;font-weight:800;color:var(--d-white);margin-top:4px"><span id="bAvg">—</span> ₽</div></div>
+      <div style="margin-top:12px"><div style="font-size:13px;color:var(--d-muted)">Хватит примерно на</div>
+        <div style="font-size:24px;font-weight:800;color:var(--d-white);margin-top:4px"><span id="bDays">—</span></div></div>
+    </div>
+    <div class="d-card">
+      <h3>По моделям (30д)</h3>
+      <div class="desc">Распределение запросов.</div>
+      <div id="aModels" style="margin-top:14px"><div class="d-empty">—</div></div>
+    </div>
+  </section>
+
+  <section class="d-card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div><h3 style="margin:0">По дням (30д)</h3><div class="desc">Объём запросов по дням.</div></div>
+      <div style="font-size:11.5px;color:var(--d-muted)">Всего: <b id="aDailyTotal" style="color:var(--d-white)">—</b> · Max/день: <b id="aDailyMax" style="color:var(--d-white)">—</b></div>
+    </div>
+    <div id="aDailyChart" style="margin-top:18px;display:flex;align-items:flex-end;gap:3px;height:140px;position:relative"></div>
+    <div id="aDailyAxis" style="display:flex;gap:3px;margin-top:6px;font-size:10.5px;color:var(--d-muted);font-family:'JetBrains Mono',ui-monospace,monospace"></div>
+  </section>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+SCX.boot('analytics', function(){
+  SCX.api('/api/analytics.php?action=overview').then(function(d){
+    if (!d || !d.ok) return;
+    document.getElementById('aReq').textContent = (d.requests_30d||0).toLocaleString('ru-RU');
+    document.getElementById('aTok').textContent = SCX.fmtTokens(d.tokens_30d||0);
+    document.getElementById('aSpent').textContent = SCX.fmtRub(d.spent_30d||0) + ' ₽';
+    var models = d.by_model || [];
+    if (models.length) {
+      var total = models.reduce(function(s,m){ return s + (+m.cnt||0); }, 0) || 1;
+      document.getElementById('aModels').innerHTML = models.slice(0,6).map(function(m){
+        var pct = (+m.cnt/total*100).toFixed(1);
+        return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>'+SCX.escapeHtml(m.model||'—')+'</span><span style="color:var(--d-muted)">'+m.cnt+' · '+pct+'%</span></div>'
+          + '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:4px;overflow:hidden"><span style="display:block;height:100%;background:var(--d-white);width:'+pct+'%"></span></div></div>';
+      }).join('');
+    } else { document.getElementById('aModels').innerHTML = '<div class="d-empty">Запросов пока нет</div>'; }
+
+    var daily = d.daily || [];
+    var chart = document.getElementById('aDailyChart');
+    var axis  = document.getElementById('aDailyAxis');
+    if (daily.length) {
+      var max   = daily.reduce(function(m,x){ return Math.max(m, +x.cnt||0); }, 0);
+      var total = daily.reduce(function(s,x){ return s + (+x.cnt||0); }, 0);
+      var maxNonZero = max || 1;
+      document.getElementById('aDailyMax').textContent   = max.toLocaleString('ru-RU');
+      document.getElementById('aDailyTotal').textContent = total.toLocaleString('ru-RU');
+
+      // Bars
+      chart.innerHTML = daily.map(function(x){
+        var cnt = +x.cnt || 0;
+        var h = Math.max(2, (cnt / maxNonZero * 100)).toFixed(1);
+        var dd = (x.date || '').slice(8,10), mm = (x.date || '').slice(5,7);
+        var opacity = cnt > 0 ? 0.78 : 0.15;
+        return '<div class="d-bar" title="'+x.date+': '+cnt+' зап." '
+             + 'style="flex:1;min-width:8px;height:'+h+'%;background:var(--d-white);opacity:'+opacity+';'
+             + 'border-radius:2px 2px 0 0;position:relative;cursor:default" '
+             + 'data-cnt="'+cnt+'" data-d="'+dd+'.'+mm+'"></div>';
+      }).join('');
+
+      // X-axis labels: show every Nth date so they don't overlap (~6 labels)
+      var step = Math.ceil(daily.length / 6);
+      axis.innerHTML = daily.map(function(x, i){
+        var label = (i % step === 0 || i === daily.length - 1)
+          ? (x.date || '').slice(8,10) + '.' + (x.date || '').slice(5,7)
+          : '';
+        return '<div style="flex:1;min-width:8px;text-align:center;white-space:nowrap;overflow:hidden">'+label+'</div>';
+      }).join('');
+
+      // Hover: show value above the bar
+      chart.querySelectorAll('.d-bar').forEach(function(b){
+        b.addEventListener('mouseenter', function(){
+          if (!b.dataset.cnt || b.dataset.cnt === '0') return;
+          var tip = document.createElement('div');
+          tip.className = 'd-bar-tip';
+          tip.style.cssText = 'position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--d-s4);color:var(--d-white);font-size:11px;padding:3px 7px;border-radius:5px;white-space:nowrap;pointer-events:none;font-family:Inter,sans-serif;border:1px solid var(--d-border-strong);z-index:5';
+          tip.textContent = b.dataset.d + ' · ' + (+b.dataset.cnt).toLocaleString('ru-RU');
+          b.appendChild(tip);
+          b.style.opacity = 1;
+        });
+        b.addEventListener('mouseleave', function(){
+          var t = b.querySelector('.d-bar-tip'); if (t) t.remove();
+          b.style.opacity = +b.dataset.cnt > 0 ? 0.78 : 0.15;
+        });
+      });
+    } else {
+      chart.innerHTML = '<div class="d-empty" style="width:100%;text-align:center;color:var(--d-muted);align-self:center">Запросов пока нет</div>';
+      axis.innerHTML = '';
+    }
+  });
+  SCX.api('/api/analytics.php?action=burn_rate&days=14').then(function(d){
+    if (!d || !d.ok) return;
+    document.getElementById('bAvg').textContent = SCX.fmtRub(d.daily_avg||0);
+    document.getElementById('bDays').textContent = d.days_left==null ? '∞' : (d.days_left + ' дн.');
+  });
+});
+</script>
+</body></html>

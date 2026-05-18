@@ -1,0 +1,23 @@
+[Unit]
+Description=Kiro → OpenAI Proxy Server
+After=network.target
+
+[Service]
+Type=simple
+User=kiro
+Group=kiro
+WorkingDirectory=/opt/kiro-proxy
+EnvironmentFile=/opt/kiro-proxy/.env
+ExecStart=/opt/kiro-proxy/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/kiro-proxy
+
+[Install]
+WantedBy=multi-user.target

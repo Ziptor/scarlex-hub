@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Маркет — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.p-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.p-card{padding:22px 22px 22px;border-radius:14px;background:var(--d-card-bg);border:1px solid var(--d-border);display:flex;flex-direction:column;gap:8px;position:relative}
+.p-card.featured{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.04)}
+.p-card.has-badge{padding-top:42px}
+.p-badge{position:absolute;top:14px;left:14px;right:14px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--d-bg);background:var(--d-white);padding:4px 10px;border-radius:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-name{font-size:18px;font-weight:800;color:var(--d-white)}
+.p-tok{font-size:28px;font-weight:800;color:var(--d-white);letter-spacing:-.02em}
+.p-per{font-size:12px;color:var(--d-muted)}
+.p-price{font-size:22px;font-weight:700;color:var(--d-white);margin-top:8px}
+.p-card .d-btn{margin-top:auto}
+.tier-note{font-size:12px;color:var(--d-muted);margin-top:6px}
+.tier-note b{color:var(--d-white)}
+.enterprise-zone{padding:14px 16px;border-radius:10px;background:rgba(255,206,90,.08);border:1px solid rgba(255,206,90,.25);margin-top:10px;display:none}
+.enterprise-zone.show{display:block}
+.enterprise-zone .ez-t{font-weight:700;color:var(--d-warn);font-size:13px;margin-bottom:4px}
+.enterprise-zone .ez-d{font-size:12.5px;color:var(--d-muted);line-height:1.55}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">Баланс и тарифы</div><h1 class="d-page-title">Маркет</h1>
+      <div class="d-page-sub">Готовые пакеты или выбери объём ползунком.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section style="margin-bottom:24px"><h3 style="color:var(--d-white);font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px">Готовые пакеты</h3>
+    <div id="prodBox" class="p-grid"><div class="d-empty">Загрузка…</div></div>
+  </section>
+
+  <section class="d-card" style="margin-bottom:24px">
+    <h3>Свой объём</h3>
+    <div class="desc">Двигай ползунок — цена пересчитывается по ступеням. До 500M — самообслуживание, дальше — индивидуальный расчёт.</div>
+    <div style="margin-top:18px"><input type="range" class="d-slider" id="cSlider" min="0" max="1000" step="1" value="90"></div>
+    <div style="position:relative;height:18px;margin-top:6px;font-size:11px;color:var(--d-muted)">
+      <span style="position:absolute;left:0%;transform:translateX(0%)">1M</span>
+      <span style="position:absolute;left:18%;transform:translateX(-50%)">100M</span>
+      <span style="position:absolute;left:49.8%;transform:translateX(-50%)">250M</span>
+      <span style="position:absolute;left:90%;transform:translateX(-50%);color:var(--d-warn)">500M</span>
+      <span style="position:absolute;left:92.2%;transform:translateX(-50%);color:var(--d-warn);opacity:.6">1B</span>
+      <span style="position:absolute;right:0%;transform:translateX(0%)">5B</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;flex-wrap:wrap;gap:12px">
+      <div><div class="d-label">Объём</div><div style="font-size:30px;font-weight:800;color:var(--d-white)"><span id="cTokens">50M</span> токенов</div></div>
+      <div><div class="d-label">Цена</div><div style="font-size:30px;font-weight:800;color:var(--d-white)"><span id="cPrice">—</span> ₽</div><div class="p-per"><span id="cPer">—</span> ₽ / 1M</div></div>
+      <button class="d-btn primary" id="cBuy">Купить</button>
+    </div>
+    <div class="tier-note" id="cTier"></div>
+    <div class="enterprise-zone" id="cEnt">
+      <div class="ez-t">⚡ Цена по договорённости</div>
+      <div class="ez-d">Объёмы свыше 500M токенов согласовываем индивидуально: даём корпоративную скидку, расширенные RPM-лимиты и SLA.</div>
+      <a class="d-btn primary" id="cEntBtn" target="_blank" rel="noopener" style="margin-top:12px;display:inline-block">Связаться в Telegram</a>
+    </div>
+  </section>
+
+  <section class="d-card">
+    <h3>Промокод</h3>
+    <div class="desc">Применяется при покупке (учитывай в чекауте отдельно).</div>
+    <div style="display:flex;gap:8px;margin-top:14px;max-width:400px">
+      <input class="d-input" id="promoCode" placeholder="SCARLEX10">
+      <button class="d-btn" id="promoCheck">Проверить</button>
+    </div>
+    <div id="promoOut" style="margin-top:10px;font-size:13px"></div>
+  </section>
+</main>
+
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+var STATE = {products:[], anchors:[], range:{min:1000000,max:5000000000,quote_max:500000000,contact_url:'https://t.me/scarlex_support'}, promo:null};
+
+function fmtTokensShort(n){
+  if (n >= 1000000000) return (n/1000000000).toFixed(n%1000000000?1:0)+'B';
+  if (n >= 1000000) return Math.round(n/1000000)+'M';
+  return n;
+}
+
+// Локальный расчёт цены: ступенчатый Floor + кламп к следующему пакету.
+// Полностью повторяет логику api/pricing.php — чтобы клиент не дёргал бэк на каждое движение слайдера.
+function calcPrice(tokens){
+  if (tokens > STATE.range.quote_max) return {contact:true, contact_url:STATE.range.contact_url};
+  var anchors = STATE.anchors;
+  if (!anchors.length) {
+    var per = 19, price = +(per * tokens / 1e6).toFixed(2);
+    return {contact:false, price_rub:price, per_1m:per, tier:null};
+  }
+  var tier = anchors[0];
+  for (var i=0; i<anchors.length; i++) if (tokens >= anchors[i].tokens) tier = anchors[i];
+  var per = tier.per_1m;
+  var price = +(per * tokens / 1e6).toFixed(2);
+  // кламп к следующему anchor (custom не дороже пакета)
+  var next = null;
+  for (var j=0; j<anchors.length; j++) if (anchors[j].tokens > tokens) { next = anchors[j]; break; }
+  if (next && price > next.price_rub) {
+    price = +next.price_rub;
+    per   = +(price / (tokens / 1e6)).toFixed(4);
+  }
+  return {contact:false, price_rub:price, per_1m:per, tier:{tokens:tier.tokens, per_1m:tier.per_1m}};
+}
+
+function renderProducts(){
+  document.getElementById('prodBox').innerHTML = STATE.products.map(function(p){
+    var hasBadge = !!p.badge;
+    var bg = hasBadge ? '<div class="p-badge">'+SCX.escapeHtml(p.badge)+'</div>' : '';
+    var cls = 'p-card' + (hasBadge ? ' featured has-badge' : '');
+    var btn = p.is_trial
+      ? '<button class="d-btn primary" data-buy="'+p.slug+'">Получить бесплатно</button>'
+      : '<button class="d-btn primary" data-buy="'+p.slug+'">Купить за '+SCX.fmtRub(p.price_rub)+' ₽</button>';
+    return '<div class="'+cls+'">'+bg
+      + '<div class="p-name">'+SCX.escapeHtml(p.name)+'</div>'
+      + '<div class="p-tok">'+SCX.fmtTokens(p.tokens)+'</div>'
+      + '<div class="p-per">'+(p.price_per_1m||0)+' ₽ / 1M</div>'
+      + (p.is_trial ? '<div class="p-price">Бесплатно</div>' : '<div class="p-price">'+SCX.fmtRub(p.price_rub)+' ₽</div>')
+      + btn + '</div>';
+  }).join('');
+  document.querySelectorAll('[data-buy]').forEach(function(b){
+    b.onclick = function(){
+      var slug = b.dataset.buy, p = STATE.products.filter(function(x){return x.slug===slug;})[0];
+      if (!p) return;
+      if (!confirm((p.is_trial?'Получить ':'Купить ')+p.name+(p.is_trial?'?':' за '+p.price_rub+' ₽?'))) return;
+      SCX.api('/api/buy_key.php', {action:'buy', product_id:p.id, promo_code:STATE.promo||''}).then(function(r){
+        if (r && r.ok) { SCX.toast('Ключ создан! +'+SCX.fmtTokens(r.tokens)); setTimeout(function(){ location.href='/dashboard/keys.html'; }, 800); }
+        else SCX.toast(r && r.error || 'Ошибка');
+      });
+    };
+  });
+}
+
+function sliderTokens(){
+  var sl = document.getElementById('cSlider');
+  var v = +sl.value; // 0..1000
+  // 0..900 → 1M..500M (линейно по миллионам, шаг ~0.55M, округляем до 1M)
+  // 900..1000 → 500M..5B (линейно)
+  var t;
+  if (v <= 900) {
+    var mm = 1 + (v/900) * (500 - 1); // 1..500
+    t = Math.round(mm) * 1000000;
+  } else {
+    var bb = (v - 900) / 100; // 0..1
+    t = Math.round(500 + bb * (5000 - 500)) * 1000000; // 500M..5B
+  }
+  return t;
+}
+
+function tokensToSlider(t){
+  // обратное преобразование для инициализации
+  var m = t / 1000000;
+  if (m <= 500) return Math.round((m - 1) / 499 * 900);
+  return 900 + Math.round((m - 500) / 4500 * 100);
+}
+
+function updateCustom(){
+  var tokens = sliderTokens();
+  document.getElementById('cTokens').textContent = fmtTokensShort(tokens);
+  var r = calcPrice(tokens);
+  var ent = document.getElementById('cEnt');
+  var note = document.getElementById('cTier');
+  var btn = document.getElementById('cBuy');
+  if (r.contact) {
+    document.getElementById('cPrice').textContent = '—';
+    document.getElementById('cPer').textContent = '—';
+    note.innerHTML = '';
+    ent.classList.add('show');
+    document.getElementById('cEntBtn').href = r.contact_url || STATE.range.contact_url;
+    btn.disabled = true; btn.textContent = 'Цена по договорённости';
+  } else {
+    document.getElementById('cPrice').textContent = SCX.fmtRub(r.price_rub);
+    document.getElementById('cPer').textContent = (+r.per_1m).toFixed(2);
+    ent.classList.remove('show');
+    btn.disabled = false; btn.textContent = 'Купить';
+    if (r.tier) {
+      note.innerHTML = 'Ступень: <b>от '+fmtTokensShort(r.tier.tokens)+'</b> · <b>'+(+r.tier.per_1m).toFixed(2)+' ₽/1M</b>';
+    } else { note.innerHTML = ''; }
+  }
+}
+
+document.getElementById('cSlider').addEventListener('input', updateCustom);
+document.getElementById('cBuy').onclick = function(){
+  var tokens = sliderTokens();
+  if (tokens > STATE.range.quote_max) {
+    window.open(STATE.range.contact_url, '_blank'); return;
+  }
+  if (!confirm('Купить ' + fmtTokensShort(tokens) + ' токенов?')) return;
+  SCX.api('/api/buy_key.php', {action:'buy_custom', tokens:tokens, promo_code:STATE.promo||''}).then(function(r){
+    if (r && r.ok) { SCX.toast('Ключ создан!'); setTimeout(function(){ location.href='/dashboard/keys.html'; }, 800); }
+    else if (r && r.contact) { window.open(r.contact_url || STATE.range.contact_url, '_blank'); }
+    else SCX.toast(r && r.error || 'Ошибка');
+  });
+};
+
+document.getElementById('promoCheck').onclick = function(){
+  var code = document.getElementById('promoCode').value.trim();
+  if (!code) return;
+  SCX.api('/api/promocodes.php', {action:'validate', code:code}).then(function(r){
+    var out = document.getElementById('promoOut');
+    if (r && r.ok) {
+      STATE.promo = code;
+      out.innerHTML = '<span class="d-pill ok">'+code+'</span> Скидка ' + r.value + (r.type==='balance'?' ₽':'%');
+    } else {
+      STATE.promo = null;
+      out.innerHTML = '<span class="d-pill err">'+SCX.escapeHtml(r && r.error || 'Не найден')+'</span>';
+    }
+  });
+};
+
+SCX.boot('market', function(){
+  SCX.api('/api/buy_key.php?action=products').then(function(d){
+    if (!d || !d.ok) return;
+    STATE.products = d.products || [];
+    // Anchors для локального расчёта: visible + allow_custom + не trial, по tokens ASC
+    STATE.anchors = STATE.products
+      .filter(function(p){ return !p.is_trial && p.allow_custom !== false && p.tokens > 0 && p.price_rub > 0; })
+      .map(function(p){ return {tokens:+p.tokens, price_rub:+p.price_rub, per_1m:+p.price_per_1m}; })
+      .sort(function(a,b){ return a.tokens - b.tokens; });
+    if (d.custom) {
+      STATE.range = {
+        min: d.custom.min,
+        max: d.custom.max,
+        quote_max: d.custom.quote_max || 500000000,
+        contact_url: d.custom.contact_url || 'https://t.me/scarlex_support'
+      };
+    }
+    document.getElementById('cEntBtn').href = STATE.range.contact_url;
+    document.getElementById('cSlider').value = tokensToSlider(50000000);
+    renderProducts();
+    updateCustom();
+  });
+});
+</script>
+</body></html>

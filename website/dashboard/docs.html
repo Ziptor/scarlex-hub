@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Документация — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">API</div><h1 class="d-page-title">Документация</h1>
+      <div class="d-page-sub">Подключение OpenAI-совместимого API Scarlex к SDK и редакторам.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section class="d-card">
+    <div class="docs-wrap">
+      <nav class="docs-side" id="docsNav"></nav>
+      <div class="docs-main" id="docsMain">
+
+<section id="quickstart">
+<h2>Быстрый старт</h2>
+<p>Scarlex — это OpenAI-совместимый прокси к Anthropic Claude. Любой SDK или редактор, поддерживающий <b>OpenAI Chat Completions</b>, можно подключить, указав базовый URL и API-ключ.</p>
+<table>
+<tr><th>Параметр</th><th>Значение</th></tr>
+<tr><td>Base URL</td><td><code>https://api.scarlex.ru/v1</code></td></tr>
+<tr><td>Авторизация</td><td><code>Authorization: Bearer YOUR_KEY</code></td></tr>
+<tr><td>Формат</td><td>OpenAI Chat Completions</td></tr>
+</table>
+<p>Ключ берётся из раздела <a href="/dashboard/keys.html">Ключи</a>. Биллинг — по токенам (<code>prompt_tokens + completion_tokens</code>), списание с лимита ключа.</p>
+<div class="docs-code"><pre>curl https://api.scarlex.ru/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-opus-4.7",
+    "messages": [{"role":"user","content":"Привет!"}]
+  }'</pre></div>
+</section>
+
+<section id="auth">
+<h3>Авторизация</h3>
+<p>Заголовок <code>Authorization: Bearer YOUR_KEY</code>. Ключ передаётся в каждом запросе. Без ключа или с неверным — <code>401 Unauthorized</code>.</p>
+<p>Один ключ = один лимит токенов. При исчерпании — <code>402 Payment Required</code>. Пополнение в разделе <a href="/dashboard/keys.html">Ключи</a> или <a href="/dashboard/market.html">Маркет</a>.</p>
+</section>
+
+<section id="sdk-python">
+<h2>OpenAI Python SDK</h2>
+<p>Установка: <code>pip install openai</code></p>
+<div class="docs-code"><pre>from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_KEY",
+    base_url="https://api.scarlex.ru/v1",
+)
+resp = client.chat.completions.create(
+    model="claude-opus-4.7",
+    messages=[{"role":"user","content":"Привет!"}],
+    max_tokens=1024,
+)
+print(resp.choices[0].message.content)</pre></div>
+</section>
+
+<section id="sdk-node">
+<h3>OpenAI Node.js SDK</h3>
+<p>Установка: <code>npm install openai</code></p>
+<div class="docs-code"><pre>import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "YOUR_KEY",
+  baseURL: "https://api.scarlex.ru/v1",
+});
+
+const r = await client.chat.completions.create({
+  model: "claude-opus-4.7",
+  messages: [{ role: "user", content: "Привет!" }],
+  max_tokens: 1024,
+});
+console.log(r.choices[0].message.content);</pre></div>
+</section>
+
+<section id="sdk-curl">
+<h3>cURL</h3>
+<p>Non-stream:</p>
+<div class="docs-code"><pre>curl https://api.scarlex.ru/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-opus-4.7",
+    "messages": [{"role":"user","content":"Объясни рекурсию"}],
+    "temperature": 0.7,
+    "max_tokens": 512
+  }'</pre></div>
+<p>Stream (SSE):</p>
+<div class="docs-code"><pre>curl -N https://api.scarlex.ru/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-opus-4.7",
+    "stream": true,
+    "messages": [{"role":"user","content":"Расскажи историю"}]
+  }'</pre></div>
+</section>
+
+<section id="anthropic-python">
+<h2>Anthropic SDK</h2>
+<p>Прокси также поддерживает нативный <b>Anthropic Messages API</b> через <code>/v1/messages</code>. Можно использовать официальный SDK <code>anthropic</code> без изменений в коде, только подменив base URL.</p>
+<p>Установка: <code>pip install anthropic</code></p>
+<div class="docs-code"><pre>from anthropic import Anthropic
+
+client = Anthropic(
+    api_key="YOUR_KEY",
+    base_url="https://api.scarlex.ru",
+)
+msg = client.messages.create(
+    model="claude-opus-4.7",
+    max_tokens=1024,
+    messages=[{"role":"user","content":"Привет!"}],
+)
+print(msg.content[0].text)</pre></div>
+</section>
+
+<section id="anthropic-node">
+<h3>Anthropic Node.js SDK</h3>
+<p>Установка: <code>npm install @anthropic-ai/sdk</code></p>
+<div class="docs-code"><pre>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: "YOUR_KEY",
+  baseURL: "https://api.scarlex.ru",
+});
+
+const msg = await client.messages.create({
+  model: "claude-opus-4.7",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Привет!" }],
+});
+console.log(msg.content[0].text);</pre></div>
+</section>
+
+<section id="ide-claude-code">
+<h2>Claude Code</h2>
+<p>Официальный CLI от Anthropic. Установи и настрой через переменные окружения:</p>
+<div class="docs-code"><pre>npm install -g @anthropic-ai/claude-code
+
+export ANTHROPIC_BASE_URL=https://api.scarlex.ru
+export ANTHROPIC_API_KEY=YOUR_KEY
+
+claude</pre></div>
+<p>Работает напрямую через эндпоинт <code>/v1/messages</code>. Поддерживается streaming, function calling, multi-turn диалоги.</p>
+<div class="docs-callout info">
+<b>Особенности:</b> server-side tools (<code>text_editor</code>, <code>bash</code>, <code>web_search</code>, <code>computer</code>) отфильтровываются на стороне прокси. Если требуется агентное редактирование файлов — Claude Code работает локально, прокси только генерирует ответы модели.
+</div>
+</section>
+
+<section id="ide-cursor">
+<h2>Cursor</h2>
+<p>Настройки → <b>Models</b> → секция <b>OpenAI API Key</b>:</p>
+<ul>
+<li><b>OpenAI API Key</b>: <code>YOUR_KEY</code></li>
+<li><b>Override OpenAI Base URL</b>: <code>https://api.scarlex.ru/v1</code></li>
+<li>Добавить кастомную модель: <code>claude-opus-4.7</code> (и любые другие — см. <a href="/dashboard/market.html">Маркет</a>).</li>
+<li>Сохранить и проверить кнопкой <b>Verify</b>.</li>
+</ul>
+</section>
+
+<section id="ide-continue">
+<h3>Continue.dev</h3>
+<p>В <code>~/.continue/config.json</code> добавь модель:</p>
+<div class="docs-code"><pre>{
+  "models": [
+    {
+      "title": "Scarlex Opus 4.7",
+      "provider": "openai",
+      "model": "claude-opus-4.7",
+      "apiKey": "YOUR_KEY",
+      "apiBase": "https://api.scarlex.ru/v1"
+    }
+  ]
+}</pre></div>
+</section>
+
+<section id="ide-opencode">
+<h3>OpenCode</h3>
+<p>В <code>~/.config/opencode/opencode.json</code> используй провайдер <code>@ai-sdk/openai-compatible</code>:</p>
+<div class="docs-code"><pre>{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "Scarlex/claude-opus-4.7",
+  "provider": {
+    "Scarlex": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Scarlex",
+      "options": {
+        "baseURL": "https://api.scarlex.ru",
+        "apiKey": "YOUR_KEY"
+      },
+      "models": {
+        "claude-opus-4.7": {
+          "name": "Claude Opus 4.7",
+          "limit": { "context": 200000, "output": 64000 },
+          "variants": { "high": {}, "medium": {}, "low": {} }
+        },
+        "claude-sonnet-4": {
+          "name": "Claude Sonnet 4",
+          "limit": { "context": 200000, "output": 64000 }
+        },
+        "claude-sonnet-4-thinking": {
+          "name": "Claude Sonnet 4 (Thinking)",
+          "limit": { "context": 200000, "output": 64000 }
+        }
+      }
+    }
+  },
+  "plugin": ["oh-my-opencode@latest"]
+}</pre></div>
+</section>
+
+<section id="ide-cline">
+<h3>Cline (VSCode)</h3>
+<p>В настройках расширения Cline выбери провайдера <b>OpenAI Compatible</b>:</p>
+<ul>
+<li><b>Base URL</b>: <code>https://api.scarlex.ru/v1</code></li>
+<li><b>API Key</b>: <code>YOUR_KEY</code></li>
+<li><b>Model ID</b>: <code>claude-opus-4.7</code></li>
+</ul>
+</section>
+
+<section id="ide-aider">
+<h3>Aider</h3>
+<div class="docs-code"><pre>aider \
+  --openai-api-base https://api.scarlex.ru/v1 \
+  --openai-api-key YOUR_KEY \
+  --model claude-opus-4.7</pre></div>
+<p>Либо через переменные окружения <code>OPENAI_API_BASE</code> и <code>OPENAI_API_KEY</code>.</p>
+</section>
+
+<section id="not-supported">
+<h3>Ограничения</h3>
+<p>Прокси совместим с тремя протоколами: <b>OpenAI Chat Completions</b>, <b>OpenAI Responses API</b> (stateless) и <b>Anthropic Messages API</b>. Не поддерживается:</p>
+<ul>
+<li><code>/v1/embeddings</code>, <code>/v1/images</code>, <code>/v1/audio</code> — у апстрима (Anthropic Claude) этих моделей нет.</li>
+<li>Vision (картинки во входе) — запросы с <code>image</code> / <code>input_image</code> content blocks отклоняются с 400.</li>
+<li>Prompt caching (<code>cache_control</code>) — поле игнорируется (прокси не транслирует кеш-маркеры).</li>
+<li>Server-side tools Anthropic (<code>text_editor</code>, <code>bash</code>, <code>web_search</code>, <code>computer</code>) — тихо отфильтровываются.</li>
+<li>Server-side tools OpenAI Responses (<code>web_search</code>, <code>file_search</code>, <code>code_interpreter</code>, <code>computer_use</code>, <code>image_generation</code>) — тихо отфильтровываются.</li>
+<li>Extended thinking (<code>thinking</code>) — поле игнорируется. Для reasoning используй модель <code>claude-sonnet-4-thinking</code>.</li>
+<li>Stateful Responses API: <code>previous_response_id</code> возвращает 400, <code>store: true</code> игнорируется. Историю диалога передавай полностью в поле <code>input</code>.</li>
+</ul>
+</section>
+
+<section id="streaming">
+<h2>Streaming (SSE)</h2>
+<p>Передай <code>"stream": true</code>. Ответ идёт построчно в формате Server-Sent Events:</p>
+<div class="docs-code"><pre>data: {"id":"...","choices":[{"delta":{"content":"При"},"index":0}]}
+
+data: {"id":"...","choices":[{"delta":{"content":"вет"},"index":0}]}
+
+data: {"id":"...","choices":[{"delta":{},"finish_reason":"stop","index":0}]}
+
+data: [DONE]</pre></div>
+<p>OpenAI SDK обрабатывают это автоматически:</p>
+<div class="docs-code"><pre>stream = client.chat.completions.create(
+    model="claude-opus-4.7",
+    messages=[{"role":"user","content":"Привет"}],
+    stream=True,
+)
+for chunk in stream:
+    delta = chunk.choices[0].delta.content
+    if delta: print(delta, end="", flush=True)</pre></div>
+</section>
+
+<section id="tools">
+<h3>Tools / Function calling</h3>
+<p>Поддерживаются <code>tools</code>, <code>tool_choice</code> и <code>tool_calls</code> в формате OpenAI.</p>
+<div class="docs-code"><pre>{
+  "model": "claude-opus-4.7",
+  "messages": [
+    {"role":"user","content":"Какая погода в Москве?"}
+  ],
+  "tools": [{
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "description": "Получить погоду в городе",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {"type": "string"}
+        },
+        "required": ["city"]
+      }
+    }
+  }],
+  "tool_choice": "auto"
+}</pre></div>
+<p>Модель отвечает массивом <code>tool_calls</code>. Выполни функцию и пришли результат обратно как сообщение с <code>role: "tool"</code> и тем же <code>tool_call_id</code>.</p>
+</section>
+
+<section id="responses-api">
+<h2>OpenAI Responses API (/v1/responses)</h2>
+<p>Stateless-реализация нового протокола OpenAI <code>/v1/responses</code>. Подходит для SDK и интеграций, которые уже перешли с <code>chat.completions</code> на <code>client.responses.create()</code>.</p>
+<p><b>Ограничения по сравнению с OpenAI:</b></p>
+<ul>
+<li><code>previous_response_id</code> → <code>400 Bad Request</code>. Прокси не хранит ответы — передавай всю историю диалога в массиве <code>input</code>.</li>
+<li><code>store: true</code> принимается, но игнорируется (всё равно ничего не сохраняем).</li>
+<li><code>reasoning</code> — игнорируется. Для reasoning используй модель <code>claude-sonnet-4-thinking</code>.</li>
+<li>Server-side tools (<code>web_search</code>, <code>file_search</code>, <code>code_interpreter</code>, <code>computer_use</code>, <code>image_generation</code>) тихо отфильтровываются.</li>
+<li><code>input_image</code> → 400 (vision не поддерживается).</li>
+</ul>
+<p><b>Что работает:</b> <code>input</code> как строка или массив items (<code>message</code>, <code>function_call</code>, <code>function_call_output</code>), <code>instructions</code>, function tools (flat и nested), <code>stream: true</code> с полным набором SSE-событий (<code>response.created</code> → <code>response.output_text.delta</code> → <code>response.completed</code>), биллинг по тем же множителям моделей.</p>
+<p><b>cURL — простой вызов:</b></p>
+<div class="docs-code"><pre>curl https://api.scarlex.ru/v1/responses \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-opus-4.7",
+    "input": "Привет!"
+  }'</pre></div>
+<p><b>Python (OpenAI SDK):</b></p>
+<div class="docs-code"><pre>from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_KEY",
+    base_url="https://api.scarlex.ru/v1",
+)
+
+resp = client.responses.create(
+    model="claude-opus-4.7",
+    instructions="Ты лаконичный ассистент.",
+    input="Объясни замыкания в JS одним предложением.",
+)
+print(resp.output_text)</pre></div>
+<p><b>Streaming:</b></p>
+<div class="docs-code"><pre>stream = client.responses.create(
+    model="claude-opus-4.7",
+    input="Расскажи короткую историю",
+    stream=True,
+)
+for event in stream:
+    if event.type == "response.output_text.delta":
+        print(event.delta, end="", flush=True)</pre></div>
+<p><b>Function calling (плоский формат tools):</b></p>
+<div class="docs-code"><pre>{
+  "model": "claude-opus-4.7",
+  "input": "Какая погода в Париже?",
+  "tools": [{
+    "type": "function",
+    "name": "get_weather",
+    "description": "Получить погоду в городе",
+    "parameters": {
+      "type": "object",
+      "properties": {"city": {"type": "string"}},
+      "required": ["city"]
+    }
+  }]
+}</pre></div>
+<p>Ответ содержит item с <code>type: "function_call"</code>, <code>call_id</code>, <code>name</code>, <code>arguments</code>. Для следующего хода в <code>input</code> передаются: исходный user message → ассистентский <code>function_call</code> → <code>function_call_output</code> с тем же <code>call_id</code>.</p>
+<p><b>Multi-turn (передаём историю целиком):</b></p>
+<div class="docs-code"><pre>{
+  "model": "claude-opus-4.7",
+  "input": [
+    {"type":"message","role":"user",
+     "content":[{"type":"input_text","text":"Какая погода в Париже?"}]},
+    {"type":"function_call","call_id":"call_1",
+     "name":"get_weather","arguments":"{\"city\":\"Paris\"}"},
+    {"type":"function_call_output","call_id":"call_1",
+     "output":"{\"temp_c\":18,\"sky\":\"clear\"}"}
+  ]
+}</pre></div>
+</section>
+
+<section id="endpoints">
+<h2>Endpoints</h2>
+<table>
+<tr><th>Метод</th><th>Путь</th><th>Описание</th></tr>
+<tr><td>POST</td><td><code>/v1/chat/completions</code></td><td>OpenAI Chat Completions. Поддерживает stream, tools, temperature, max_tokens.</td></tr>
+<tr><td>POST</td><td><code>/v1/responses</code></td><td>OpenAI Responses API (stateless). Stream, tools, instructions. См. раздел <a href="#responses-api">Responses API</a>.</td></tr>
+<tr><td>POST</td><td><code>/v1/messages</code></td><td>Anthropic Messages API. Поддерживает stream, tools, multi-turn с tool_use/tool_result.</td></tr>
+<tr><td>POST</td><td><code>/v1/messages/count_tokens</code></td><td>Приблизительный подсчёт токенов для Anthropic-формата.</td></tr>
+<tr><td>GET</td><td><code>/v1/models</code></td><td>Список доступных моделей в формате OpenAI.</td></tr>
+</table>
+<p>Авторизация: <code>Authorization: Bearer YOUR_KEY</code> для OpenAI-совместимых клиентов, <code>x-api-key: YOUR_KEY</code> для Anthropic SDK / Claude Code. Поддерживаются оба варианта на любом эндпоинте.</p>
+</section>
+
+<section id="models">
+<h3>Модели</h3>
+<p>Актуальный список моделей и цены — на странице <a href="/dashboard/market.html">Маркет</a>. Программно получить список:</p>
+<div class="docs-code"><pre>curl https://api.scarlex.ru/v1/models \
+  -H "Authorization: Bearer YOUR_KEY"</pre></div>
+</section>
+
+<section id="params">
+<h3>Параметры запроса</h3>
+<table>
+<tr><th>Поле</th><th>Тип</th><th>Описание</th></tr>
+<tr><td><code>model</code></td><td>string</td><td>ID модели (см. <code>/v1/models</code>).</td></tr>
+<tr><td><code>messages</code></td><td>array</td><td>Массив сообщений с <code>role</code> и <code>content</code>. Роли: <code>system</code>, <code>user</code>, <code>assistant</code>, <code>tool</code>.</td></tr>
+<tr><td><code>temperature</code></td><td>number</td><td>0..2. По умолчанию ~1.</td></tr>
+<tr><td><code>max_tokens</code></td><td>integer</td><td>Лимит токенов в ответе.</td></tr>
+<tr><td><code>stream</code></td><td>boolean</td><td>Включить SSE-стриминг.</td></tr>
+<tr><td><code>tools</code></td><td>array</td><td>Описание функций для function calling.</td></tr>
+<tr><td><code>tool_choice</code></td><td>string&nbsp;|&nbsp;object</td><td><code>"auto"</code>, <code>"none"</code> или объект с именем функции.</td></tr>
+</table>
+</section>
+
+<section id="errors">
+<h3>Ошибки</h3>
+<table>
+<tr><th>Код</th><th>Значение</th><th>Причина</th></tr>
+<tr><td>401</td><td>Unauthorized</td><td>Неверный или отсутствующий API-ключ.</td></tr>
+<tr><td>402</td><td>Payment Required</td><td>Достигнут лимит токенов ключа (<code>hard_limit</code> / <code>tokens_limit</code>). Пополни ключ.</td></tr>
+<tr><td>429</td><td>Too Many Requests</td><td>Превышен RPM ключа.</td></tr>
+<tr><td>500</td><td>Internal Error</td><td>Внутренняя ошибка прокси.</td></tr>
+<tr><td>502</td><td>Bad Gateway</td><td>Ошибка апстрима Anthropic.</td></tr>
+<tr><td>503</td><td>Service Unavailable</td><td>Нет свободных аккаунтов в пуле. Повтори запрос через несколько секунд.</td></tr>
+</table>
+</section>
+
+<section id="limits">
+<h3>Лимиты</h3>
+<ul>
+<li><b>RPM</b> — лимит запросов в минуту на ключ. Настраивается на странице <a href="/dashboard/keys.html">Ключи</a>.</li>
+<li><b>tokens_limit</b> — мягкий лимит токенов (предупреждение).</li>
+<li><b>hard_limit</b> — жёсткий лимит, после которого запросы возвращают 402.</li>
+<li><b>Sticky sessions</b> — в течение 20 минут запросы с одним ключом стараются попадать на тот же аккаунт пула (для лучшего cache hit).</li>
+</ul>
+</section>
+
+<section id="faq">
+<h3>FAQ</h3>
+<p><b>Поддерживается ли стриминг?</b> Да, <code>stream: true</code> — формат OpenAI SSE.</p>
+<p><b>Поддерживается ли vision (картинки на вход)?</b> Нет, только текст.</p>
+<p><b>Работает ли нативный Anthropic SDK / Claude Code?</b> Да, через эндпоинт <code>/v1/messages</code>. Настройка: <code>ANTHROPIC_BASE_URL=https://api.scarlex.ru</code>.</p>
+<p><b>Почему Opus дороже Haiku?</b> К стоимости completion-токенов применяется множитель модели — таблица на странице <a href="/dashboard/market.html">Маркет</a>.</p>
+<p><b>Можно ли использовать function calling?</b> Да, через <code>tools</code> и <code>tool_choice</code> в формате OpenAI.</p>
+</section>
+
+      </div>
+    </div>
+  </section>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+SCX.boot('docs', function(){
+  var groups = [
+    {title:'Старт',       items:[['quickstart','Быстрый старт'],['auth','Авторизация']]},
+    {title:'OpenAI SDK',  items:[['sdk-python','Python'],['sdk-node','Node.js'],['sdk-curl','cURL']]},
+    {title:'Anthropic SDK', items:[['anthropic-python','Python'],['anthropic-node','Node.js']]},
+    {title:'IDE / CLI',   items:[['ide-cursor','Cursor'],['ide-continue','Continue.dev'],['ide-opencode','OpenCode'],['ide-cline','Cline'],['ide-aider','Aider'],['ide-claude-code','Claude Code'],['not-supported','Ограничения']]},
+    {title:'Продвинутое', items:[['streaming','Streaming (SSE)'],['tools','Tools / Function calling'],['responses-api','Responses API']]},
+    {title:'Справочник',  items:[['endpoints','Endpoints'],['models','Модели'],['params','Параметры'],['errors','Ошибки'],['limits','Лимиты'],['faq','FAQ']]}
+  ];
+
+  // Build sidebar
+  var nav = document.getElementById('docsNav');
+  var html = '';
+  groups.forEach(function(g){
+    html += '<div class="grp">' + g.title + '</div>';
+    g.items.forEach(function(it){
+      html += '<a href="#' + it[0] + '" data-anchor="' + it[0] + '">' + it[1] + '</a>';
+    });
+  });
+  nav.innerHTML = html;
+
+  // Wrap each <pre> with copy button
+  document.querySelectorAll('.docs-code').forEach(function(box){
+    if (box.querySelector('.docs-copy')) return;
+    var btn = document.createElement('button');
+    btn.className = 'docs-copy';
+    btn.type = 'button';
+    btn.textContent = 'Копировать';
+    box.appendChild(btn);
+  });
+
+  // Copy delegation
+  document.body.addEventListener('click', function(e){
+    var btn = e.target.closest('.docs-copy');
+    if (!btn) return;
+    var pre = btn.parentElement.querySelector('pre');
+    if (!pre) return;
+    var txt = pre.textContent;
+    var done = function(){
+      btn.textContent = 'Скопировано';
+      btn.classList.add('is-ok');
+      setTimeout(function(){ btn.textContent = 'Копировать'; btn.classList.remove('is-ok'); }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, function(){
+        try{ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }catch(_){}
+      });
+    } else {
+      try{ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }catch(_){}
+    }
+  });
+
+  // Smooth scroll + active highlight on click
+  nav.addEventListener('click', function(e){
+    var a = e.target.closest('a[data-anchor]');
+    if (!a) return;
+    e.preventDefault();
+    showTab(a.dataset.anchor, true);
+  });
+
+  var navLinks = {};
+  nav.querySelectorAll('a[data-anchor]').forEach(function(a){ navLinks[a.dataset.anchor] = a; });
+  var sections = document.querySelectorAll('#docsMain section[id]');
+  var validIds = {};
+  sections.forEach(function(s){ validIds[s.id] = true; });
+
+  function showTab(id, pushHash){
+    if (!validIds[id]) id = sections[0] ? sections[0].id : null;
+    if (!id) return;
+    sections.forEach(function(s){ s.classList.toggle('is-active', s.id === id); });
+    Object.keys(navLinks).forEach(function(k){ navLinks[k].classList.toggle('is-active', k === id); });
+    if (pushHash) history.replaceState(null, '', '#' + id);
+    var main = document.querySelector('.d-main');
+    if (main) main.scrollTo ? main.scrollTo({top:0,behavior:'smooth'}) : window.scrollTo(0,0);
+    else window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // Initial tab from hash or first
+  var initial = (location.hash || '').slice(1);
+  showTab(initial || (sections[0] && sections[0].id), false);
+
+  // React to manual hash change (back/forward)
+  window.addEventListener('hashchange', function(){
+    showTab((location.hash || '').slice(1), false);
+  });
+});
+</script>
+</body></html>

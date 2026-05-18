@@ -1,0 +1,20 @@
+[
+    {
+        "account_id": "kiro-1",
+        "login_method": "Google",
+        "email": "user1@gmail.com",
+        "access_token": "aoaAAAA...",
+        "refresh_token": "aorAAAA...",
+        "profile_arn": "arn:aws:codewhisperer:us-east-1:699475941385:profile/EHGA3GRVQMUK",
+        "proxy": "http://user:pass@ip:port"
+    },
+    {
+        "account_id": "kiro-2",
+        "login_method": "Google",
+        "email": "user2@gmail.com",
+        "access_token": "aoaAAAA...",
+        "refresh_token": "aorAAAA...",
+        "profile_arn": "arn:aws:codewhisperer:us-east-1:699475941385:profile/EHGA3GRVQMUK",
+        "proxy": ""
+    }
+]

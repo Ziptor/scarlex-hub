@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Scarlex — Публичная оферта">
+<title>Публичная оферта · Scarlex</title>
+<link rel="icon" type="image/png" href="logo_nofon.png">
+<link rel="stylesheet" href="v4style.css">
+<style>
+  .terms-wrap{max-width:880px;margin:0 auto;padding:80px 24px 120px}
+  .terms-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:18px}
+  .terms-h1{font-family:'Inter',sans-serif;font-weight:800;font-size:clamp(40px,5.5vw,68px);line-height:1.02;letter-spacing:-.035em;color:var(--white);margin-bottom:14px}
+  .terms-updated{font-size:14px;color:var(--muted);margin-bottom:64px}
+  .terms-section{display:grid;grid-template-columns:60px 1fr;gap:28px;padding:32px 0;border-top:1px solid rgba(255,255,255,.06)}
+  .terms-section:last-child{border-bottom:1px solid rgba(255,255,255,.06)}
+  .terms-num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:rgba(255,255,255,.35);padding-top:6px;letter-spacing:.05em}
+  .terms-title{font-family:'Inter',sans-serif;font-weight:700;font-size:22px;line-height:1.3;letter-spacing:-.015em;color:var(--white);margin-bottom:14px}
+  .terms-body{font-size:15px;line-height:1.7;color:rgba(230,225,216,.78)}
+  .terms-body strong{color:var(--white);font-weight:600}
+  .terms-body a{color:var(--white);border-bottom:1px solid rgba(255,255,255,.25);transition:border-color .2s}
+  .terms-body a:hover{border-bottom-color:var(--white)}
+  .terms-back{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:48px;transition:color .2s}
+  .terms-back:hover{color:var(--white)}
+  @media (max-width:640px){
+    .terms-wrap{padding:48px 20px 80px}
+    .terms-section{grid-template-columns:1fr;gap:10px;padding:28px 0}
+    .terms-num{padding-top:0;font-size:12px}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- Navbar -->
+<nav class="nav" id="navbar">
+<div class="mx nav-inner">
+  <a href="index.html" class="nav-logo">
+    <img src="logo_nofon.png" alt="Scarlex">
+  </a>
+  <div class="nav-links">
+    <a href="index.html#features" class="nav-link">Возможности</a>
+    <a href="index.html#pricing" class="nav-link">Цены</a>
+    <a href="index.html#faq" class="nav-link">FAQ</a>
+  </div>
+  <div class="nav-right">
+    <a href="authorization.html" class="nav-cta">Войти</a>
+  </div>
+</div>
+</nav>
+
+<main class="terms-wrap">
+  <a href="index.html" class="terms-back">← На главную</a>
+  <div class="terms-eyebrow">SCARLEX · LEGAL</div>
+  <h1 class="terms-h1">Публичная оферта</h1>
+  <div class="terms-updated">Дата последнего обновления: 14 мая 2026 г.</div>
+
+  <section class="terms-section">
+    <div class="terms-num">01</div>
+    <div>
+      <div class="terms-title">Общие положения</div>
+      <div class="terms-body">Настоящая публичная оферта (далее — «Оферта») определяет условия использования платформы Scarlex (далее — «Сервис»), доступной по адресу <a href="https://scarlex.ru">scarlex.ru</a> и через API-эндпоинт <a href="https://api.scarlex.ru">api.scarlex.ru</a>. Регистрация учётной записи или использование Сервиса означает полное и безоговорочное принятие настоящей Оферты. Если вы не согласны с условиями, использование Сервиса не допускается.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">02</div>
+    <div>
+      <div class="terms-title">Описание Сервиса</div>
+      <div class="terms-body">Scarlex предоставляет предоплатный доступ к API сторонних моделей искусственного интеллекта семейства Anthropic Claude (включая, но не ограничиваясь, Claude Opus, Claude Sonnet, Claude Haiku) через OpenAI-совместимый интерфейс. Сервис выступает в роли шлюза (gateway): запросы пользователя маршрутизируются к вышестоящим провайдерам ИИ, ответы возвращаются пользователю. Сервис не создаёт, не обучает и не размещает модели ИИ самостоятельно.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">03</div>
+    <div>
+      <div class="terms-title">Доступность моделей</div>
+      <div class="terms-body">Список доступных моделей, их версий, возможностей, контекстных окон и параметров может изменяться в любое время без предварительного уведомления. Scarlex не гарантирует постоянное наличие какой-либо конкретной модели и оставляет за собой право добавлять, удалять, объявлять устаревшими или изменять любые модели по своему единоличному усмотрению, в том числе в связи с изменениями, прекращением поддержки или сбоями со стороны вышестоящих провайдеров. Вы самостоятельно несёте ответственность за адаптацию ваших интеграций к изменениям моделей. Возврат средств или иная компенсация в связи с удалением или изменением моделей не предусмотрены.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">04</div>
+    <div>
+      <div class="terms-title">Отказ от гарантий</div>
+      <div class="terms-body">Сервис предоставляется строго на условиях «как есть» (as is) и «как доступно» (as available), без каких-либо гарантий — явных, подразумеваемых или предусмотренных законом. Scarlex не гарантирует бесперебойную работу, доступность, время отклика, точность результатов или отсутствие ошибок. Сервис может быть временно недоступен в любое время. Вы используете Сервис исключительно на свой страх и риск.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">05</div>
+    <div>
+      <div class="terms-title">Ценообразование</div>
+      <div class="terms-body">Актуальные цены на использование Сервиса отображаются в личном кабинете и на странице тарифов и могут изменяться в любой момент без предварительного уведомления. Пользователь обязан самостоятельно отслеживать текущие тарифы перед совершением запросов. Продолжение использования Сервиса после изменения цен означает согласие с новыми условиями. Изменение цен применяется только к запросам, инициированным после изменения; уже завершённые запросы не пересчитываются.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">06</div>
+    <div>
+      <div class="terms-title">Оплата и отсутствие возвратов</div>
+      <div class="terms-body">Сервис работает строго по предоплатной модели. Для совершения API-запросов необходимо поддерживать положительный баланс или активный лимит API-ключа. <strong>ВСЕ ПЛАТЕЖИ ОКОНЧАТЕЛЬНЫ И НЕ ПОДЛЕЖАТ ВОЗВРАТУ НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ</strong>, включая, но не ограничиваясь: закрытие учётной записи (по вашей инициативе или по инициативе Scarlex), неиспользованный остаток баланса, неудовлетворённость Сервисом, удаление или изменение моделей, перебои или недоступность Сервиса, ошибки биллинга любого характера, а также любые иные причины. Пополняя баланс, вы безотзывно отказываетесь от любых прав на возврат средств, чарджбэк или денежную компенсацию. Возвраты (частичные, пропорциональные или полные) не производятся ни в фиатной валюте (СБП, банковская карта, ЮMoney), ни в криптовалюте (CryptoBot), ни в какой-либо иной форме.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">07</div>
+    <div>
+      <div class="terms-title">Обработка данных</div>
+      <div class="terms-body">Сервис сохраняет исключительно метаданные по каждому API-запросу: используемая модель, количество токенов и стоимость. Содержимое запросов и ответов не логируется, не хранится и не анализируется. Пользователь несёт полную ответственность за данные, передаваемые через Сервис, и обязан обеспечить их соответствие применимому законодательству и условиям вышестоящих провайдеров.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">08</div>
+    <div>
+      <div class="terms-title">Прекращение доступа</div>
+      <div class="terms-body">Scarlex оставляет за собой право приостановить или заблокировать любую учётную запись или API-ключ в любое время, с указанием или без указания причин, с уведомлением или без него. При прекращении доступа (независимо от того, инициировано оно вами, Scarlex в связи с нарушением Оферты или Scarlex по своему единоличному усмотрению) остаток средств на балансе списывается и не подлежит возврату ни в какой форме. Для удаления аккаунта направьте запрос в Telegram: <a href="https://t.me/scarlex_support">@scarlex_support</a>.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">09</div>
+    <div>
+      <div class="terms-title">Допустимое использование</div>
+      <div class="terms-body">Запрещается использовать Сервис для противоправной деятельности, распространения вредоносного контента, обхода ограничений или условий вышестоящих провайдеров ИИ (Anthropic), а также для действий, нарушающих работу Сервиса для других пользователей. Перепродажа доступа к Сервису допускается только в рамках официальной партнёрской программы Scarlex на её отдельных условиях; любая несанкционированная перепродажа или сублицензирование строго запрещены. Нарушение данного пункта влечёт немедленную блокировку аккаунта без возврата средств.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">10</div>
+    <div>
+      <div class="terms-title">Партнёрская программа (реселлеры)</div>
+      <div class="terms-body">Участвуя в партнёрской программе Scarlex, вы выступаете в качестве независимого подрядчика и самостоятельно отвечаете за своих клиентов, выставление счетов, налоги, возвраты (если таковые предусмотрены), клиентскую поддержку и соблюдение применимого законодательства в отношении ваших конечных пользователей. Scarlex списывает средства с мастер-баланса реселлера по базовой себестоимости; баланс суб-аккаунтов списывается по цене, установленной самим реселлером. Scarlex не вступает в договорные отношения с конечными клиентами реселлера и не предоставляет им поддержку, возвраты или гарантии. Реселлер единолично несёт ответственность за соответствие своих цен, условий и пользовательских соглашений применимому законодательству.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">11</div>
+    <div>
+      <div class="terms-title">Ограничение ответственности</div>
+      <div class="terms-body">В максимальной степени, допускаемой применимым законодательством, совокупная ответственность Scarlex по любым претензиям, связанным с использованием Сервиса, ограничена суммой 0 (ноль) рублей. Никакая денежная компенсация, возврат средств или возмещение убытков в какой-либо форме не выплачиваются ни при каких обстоятельствах. Scarlex ни при каких обстоятельствах не несёт ответственности за прямые, косвенные, случайные, особые, последующие или штрафные убытки, включая упущенную выгоду, потерю данных, деловых возможностей или доступности моделей. Единственным и исключительным средством защиты ваших интересов в случае неудовлетворённости Сервисом является прекращение его использования.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">12</div>
+    <div>
+      <div class="terms-title">Поддержка и контакты</div>
+      <div class="terms-body">По вопросам поддержки, удаления аккаунта или биллинга обращайтесь в Telegram: <a href="https://t.me/scarlex_support">@scarlex_support</a>. Мы стремимся отвечать на все запросы в течение 24 часов в рабочие дни. Поддержка оказывается на основе разумных усилий; конкретные сроки ответа не гарантируются.</div>
+    </div>
+  </section>
+
+  <section class="terms-section">
+    <div class="terms-num">13</div>
+    <div>
+      <div class="terms-title">Изменение условий</div>
+      <div class="terms-body">Настоящая Оферта может быть изменена в любое время без предварительного уведомления. Актуальная версия всегда доступна на данной странице. Продолжение использования Сервиса после внесения изменений означает принятие обновлённых условий.</div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+<div class="mx footer-inner">
+  <div class="footer-brand-col">
+    <div class="footer-brand">Scarlex</div>
+    <div class="footer-tagline">AI API Provider</div>
+  </div>
+  <div class="footer-nav-col">
+    <div class="footer-col-title">Продукт</div>
+    <div class="footer-links">
+      <a href="index.html#pricing">Цены</a>
+      <a href="https://scarlex.ru/api-guide.html">Доступные модели</a>
+      <a href="https://scarlex.ru/api-guide.html">Документация</a>
+    </div>
+  </div>
+  <div class="footer-nav-col">
+    <div class="footer-col-title">Ресурсы</div>
+    <div class="footer-links">
+      <a href="index.html#faq">Частые вопросы</a>
+      <a href="https://scarlex.ru/api-guide.html">API Guide</a>
+      <a href="https://t.me/scarlex_support">Сообщество</a>
+    </div>
+  </div>
+  <div class="footer-support-col">
+    <div class="footer-col-title">Поддержка</div>
+    <a href="https://t.me/scarlex_support" class="footer-support-link">@scarlex_support</a>
+  </div>
+  <div class="footer-bottom">© 2026 Scarlex. Все права защищены.</div>
+  <div class="footer-terms-wrap">
+    <a href="terms.html">Публичная оферта</a>
+  </div>
+</div>
+</footer>
+
+<script src="v4app.js"></script>
+</body>
+</html>

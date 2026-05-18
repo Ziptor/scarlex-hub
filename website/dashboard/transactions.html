@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Транзакции — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--d-border)}
+.tab{padding:10px 16px;font-size:13px;font-weight:600;color:var(--d-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.is-active{color:var(--d-white);border-color:var(--d-white)}
+.tab-pane{display:none}
+.tab-pane.is-active{display:block}
+.pay-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:680px){.pay-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">Баланс и тарифы</div><h1 class="d-page-title">Транзакции</h1>
+      <div class="d-page-sub">История операций и пополнение баланса.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <div class="tabs">
+    <div class="tab is-active" data-t="topup">Пополнить</div>
+    <div class="tab" data-t="history">История</div>
+  </div>
+
+  <div class="tab-pane is-active" data-t="topup">
+    <section class="d-grid d-grid-2" style="margin-bottom:20px">
+      <div class="d-card">
+        <h3>Картой РФ (YooMoney)</h3>
+        <div class="desc">Зачисление мгновенно.</div>
+        <div class="pay-row" style="margin-top:14px">
+          <div><div class="d-label">Сумма ₽</div><input type="number" class="d-input" id="ymAmt" min="100" step="100" value="500"></div>
+          <div style="display:flex;align-items:flex-end"><button class="d-btn primary" id="ymGo" style="width:100%">Перейти к оплате</button></div>
+        </div>
+        <div class="desc">Мин. 100 ₽ · Макс. 500 000 ₽</div>
+      </div>
+
+      <div class="d-card">
+        <h3>Crypto (CryptoBot)</h3>
+        <div class="desc">USDT/TON/BTC через Telegram-бот.</div>
+        <div class="pay-row" style="margin-top:14px">
+          <div><div class="d-label">Валюта</div>
+            <select class="d-select" id="cbCur"><option>RUB</option><option>USD</option></select></div>
+          <div><div class="d-label">Сумма</div><input type="number" class="d-input" id="cbAmt" min="100" value="500"></div>
+        </div>
+        <button class="d-btn primary" id="cbGo" style="width:100%">Создать счёт</button>
+      </div>
+    </section>
+
+    <section class="d-card">
+      <h3>Промокод на баланс</h3>
+      <div class="desc">Если у тебя есть промокод типа balance — активируй его здесь.</div>
+      <div style="display:flex;gap:8px;margin-top:14px;max-width:420px">
+        <input class="d-input" id="prCode" placeholder="WELCOME100">
+        <button class="d-btn primary" id="prGo">Активировать</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="tab-pane" data-t="history">
+    <section class="d-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <h3>История операций</h3>
+        <div style="display:flex;gap:8px">
+          <select class="d-select" id="filt" style="width:auto">
+            <option value="all">Все</option><option value="financial">Финансы</option><option value="chat">Чаты</option>
+          </select>
+          <a class="d-btn sm" href="/api/transactions.php?action=export_csv&type=financial">CSV финансы</a>
+        </div>
+      </div>
+      <div id="txBox"><div class="d-empty">Загрузка…</div></div>
+    </section>
+  </div>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+function loadHistory(){
+  var f = document.getElementById('filt').value;
+  document.getElementById('txBox').innerHTML = '<div class="d-empty">Загрузка…</div>';
+  SCX.api('/api/transactions.php?action=list&filter=' + f + '&page=1').then(function(d){
+    if (!d || !d.ok) { document.getElementById('txBox').innerHTML = '<div class="d-empty">Ошибка</div>'; return; }
+    var rows = d.transactions || [];
+    if (!rows.length) { document.getElementById('txBox').innerHTML = '<div class="d-empty">Транзакций нет</div>'; return; }
+    var html = '<table class="d-table"><thead><tr><th>Дата</th><th>Тип</th><th>Описание</th><th>Ключ</th><th style="text-align:right">Сумма</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var amt, color = 'var(--d-text)';
+      if (r.tx_type === 'financial') {
+        amt = Number(r.amount).toFixed(2) + ' ₽';
+        if (+r.amount > 0) color = 'var(--d-success)'; else if (+r.amount < 0) color = 'var(--d-danger)';
+      } else {
+        amt = SCX.fmtTokens(r.total_tokens) + ' tok';
+        if (r.status !== 'success') color = 'var(--d-danger)';
+      }
+      html += '<tr><td>'+SCX.fmtDate(r.created_at)+'</td><td>'+SCX.escapeHtml(r.type||r.tx_type)+'</td><td>'+SCX.escapeHtml(r.description||r.model||'—')+'</td><td class="d-mono">'+SCX.escapeHtml(r.key_label||r.key_masked||'—')+'</td><td style="text-align:right;color:'+color+';font-weight:600">'+amt+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('txBox').innerHTML = html;
+  });
+}
+
+SCX.boot('transactions', function(){
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.onclick = function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('is-active', x===t); });
+      document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.toggle('is-active', p.dataset.t===t.dataset.t); });
+      if (t.dataset.t === 'history') loadHistory();
+    };
+  });
+
+  // Hash-based default tab
+  if (new URLSearchParams(location.search).get('action') === 'history') {
+    document.querySelector('.tab[data-t="history"]').click();
+  }
+
+  document.getElementById('ymGo').onclick = function(){
+    var amt = +document.getElementById('ymAmt').value;
+    if (amt < 100) return SCX.toast('Минимум 100 ₽');
+    SCX.api('/api/wallet.php', {action:'topup_card', amount:amt}).then(function(r){
+      if (r && r.ok && r.pay_url) location.href = r.pay_url;
+      else SCX.toast(r && r.error || 'Ошибка');
+    });
+  };
+  document.getElementById('cbGo').onclick = function(){
+    var amt = +document.getElementById('cbAmt').value, cur = document.getElementById('cbCur').value;
+    SCX.api('/api/wallet.php', {action:'topup_crypto', amount:amt, currency:cur}).then(function(r){
+      if (r && r.ok && r.pay_url) window.open(r.pay_url, '_blank');
+      else SCX.toast(r && r.error || 'Ошибка');
+    });
+  };
+  document.getElementById('prGo').onclick = function(){
+    var code = document.getElementById('prCode').value.trim();
+    if (!code) return;
+    SCX.api('/api/promocodes.php', {action:'activate_balance', code:code}).then(function(r){
+      if (r && r.ok) { SCX.toast('+' + r.amount + ' ₽ на баланс'); setTimeout(function(){ location.reload(); }, 700); }
+      else SCX.toast(r && r.error || 'Ошибка');
+    });
+  };
+});
+</script>
+</body></html>

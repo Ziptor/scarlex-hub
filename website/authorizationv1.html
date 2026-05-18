@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Scarlex — Вход и регистрация">
+  <title>Scarlex | Авторизация</title>
+  <link rel="icon" type="image/png" href="logo_nofon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://www.google.com/recaptcha/api.js?render=6LeLxO0sAAAAADwpQdJgmPMhVwRsaYGhwQV-U4_z"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --bg-soft: #101010;
+      --text-primary: #f4f4f4;
+      --text-secondary: #a8a8a8;
+      --text-muted: #6a6a6a;
+      --accent: #ffffff;
+      --accent-hover: #e0e0e0;
+      --accent-glow: rgba(255, 255, 255, 0.14);
+      --success: oklch(0.78 0.16 145);
+      --danger: #ff6f7f;
+      --surface: #141414;
+      --surface-border: #1f1f1f;
+      --border-2: #2a2a2a;
+      --radius-xl: 18px;
+      --radius-lg: 14px;
+      --radius-sm: 10px;
+      --shadow-md: 0 14px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { color-scheme: dark; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text-secondary);
+      font-family: "Onest", system-ui, sans-serif;
+      font-feature-settings: "ss01","cv11";
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; border: none; background: none; color: inherit; }
+
+    /* Background layers — matched to indexv5.html */
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
+    }
+    .noise {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: .04; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/></svg>");
+    }
+    .glow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      background: radial-gradient(700px 400px at 50% 0%, rgba(255,255,255,.05), transparent 60%);
+    }
+
+    .auth-wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    .auth-logo { height: 78px; width: auto; display: block; }
+
+    .auth-card {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.06), transparent 55%);
+      pointer-events: none;
+    }
+
+    .auth-card > * { position: relative; z-index: 1; }
+
+    .auth-title {
+      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 50px;
+      padding: 0 16px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 0.92rem;
+      transition: border-color .2s, background .2s;
+      cursor: text;
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .password-wrap { position: relative; }
+    .password-wrap .form-input { padding-right: 48px; }
+    .password-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color .2s, background .2s;
+    }
+    .password-toggle:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .password-toggle svg { width: 18px; height: 18px; }
+    .password-toggle .eye-off { display: none; }
+    .password-toggle.is-shown .eye-on { display: none; }
+    .password-toggle.is-shown .eye-off { display: block; }
+    .password-toggle.is-shown { color: #fff; }
+
+    .form-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .form-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.04);
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: background .2s, border-color .2s;
+    }
+    .form-checkbox input[type="checkbox"]:checked {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .form-checkbox input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 5px; top: 2px;
+      width: 5px; height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    .form-checkbox span {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .auth-btn {
+      width: 100%;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1a1a1a;
+      background: linear-gradient(135deg, #ffffff, #cccccc);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 14px 38px rgba(255, 255, 255, 0.14);
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 18px 44px rgba(255, 255, 255, 0.18);
+    }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+    .auth-switch a, .auth-switch button.linklike {
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s;
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+      font-family: inherit;
+      text-decoration: underline;
+    }
+    .auth-switch a:hover, .auth-switch button.linklike:hover { opacity: 0.8; }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 22px 0;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .auth-divider span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .tg-btn {
+      width: 100%;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #fff;
+      background: linear-gradient(135deg, #2AABEE, #229ED9);
+      border: 1px solid rgba(42, 171, 238, 0.3);
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s, opacity .2s;
+    }
+    .tg-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(42, 171, 238, 0.25);
+    }
+    .tg-btn:active { transform: translateY(0); }
+    .tg-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .auth-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: color .2s;
+    }
+    .auth-back:hover { color: #fff; }
+
+    .auth-error {
+      display: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(255, 127, 159, 0.08);
+      border: 1px solid rgba(255, 127, 159, 0.2);
+      color: #ff7f9f;
+      font-size: 0.84rem;
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+    .auth-error.visible { display: block; }
+
+    /* Form transitions */
+    .auth-form {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    .auth-form.is-active {
+      display: block;
+      animation: formIn .4s ease forwards;
+    }
+    @keyframes formIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stagger fields on load */
+    .auth-form.is-active .form-group:nth-child(1) { animation: fieldIn .4s ease .05s both; }
+    .auth-form.is-active .form-group:nth-child(2) { animation: fieldIn .4s ease .1s both; }
+    .auth-form.is-active .form-group:nth-child(3) { animation: fieldIn .4s ease .15s both; }
+    .auth-form.is-active .form-group:nth-child(4) { animation: fieldIn .4s ease .2s both; }
+    .auth-form.is-active .form-checkbox { animation: fieldIn .4s ease .2s both; }
+    .auth-form.is-active .auth-btn { animation: fieldIn .4s ease .25s both; }
+    .auth-form.is-active .auth-switch { animation: fieldIn .4s ease .3s both; }
+    @keyframes fieldIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 22px; border-radius: var(--radius-lg); }
+      .auth-logo { height: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="glow" aria-hidden="true"></div>
+
+  <div class="auth-wrapper">
+    <a href="index.html"><img src="scarlex_high.png" alt="Scarlex" class="auth-logo"></a>
+
+    <div class="auth-card">
+      <!-- Login Form -->
+      <form class="auth-form is-active" id="loginForm">
+        <h1 class="auth-title">Вход</h1>
+        <p class="auth-subtitle">Войдите в свой аккаунт Scarlex</p>
+        <div class="auth-error" id="loginError"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email или логин</label>
+          <input class="form-input" type="text" id="loginEmail" placeholder="Введите email или username" autocomplete="username" required>
+          <div style="color:var(--text-muted);font-size:0.78rem;margin-top:6px">Можно войти как по email, так и по логину аккаунта</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Пароль</label>
+          <div class="password-wrap">
+            <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" required>
+            <button type="button" class="password-toggle" data-toggle="loginPassword" aria-label="Показать пароль">
+              <svg class="eye-on" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+              <svg class="eye-off" viewBox="0 0 24 24" fill="none"><path d="M2 2l20 20M6.7 6.7C3.6 8.7 2 12 2 12s3.5 7 10 7c2.1 0 3.9-.6 5.3-1.4M9.9 5.1C10.6 5 11.3 5 12 5c6.5 0 10 7 10 7-.5.9-1.2 2-2.2 3M9.5 9.5a3.5 3.5 0 005 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <label class="form-checkbox">
+          <input type="checkbox">
+          <span>Запомнить меня</span>
+        </label>
+
+        <button class="auth-btn" type="submit">Войти</button>
+
+        <div class="auth-divider"><span>или</span></div>
+        <button type="button" class="tg-btn" id="tgLoginBtn" onclick="telegramLogin()">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.28-.02-.12.03-2.02 1.28-5.69 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.09-.49-.84-.28-1.51-.42-1.45-.89.03-.25.38-.5 1.04-.76 4.09-1.78 6.81-2.96 8.18-3.52 3.9-1.62 4.7-1.9 5.23-1.91.12 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .38z" fill="currentColor"/></svg>
+          Войти через Telegram
+        </button>
+
+        <div class="auth-switch">
+          Нет аккаунта? <button type="button" class="linklike" onclick="switchForm('register')">Зарегистрируйтесь</button>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form class="auth-form" id="registerForm">
+        <h1 class="auth-title">Регистрация</h1>
+        <p class="auth-subtitle">Создайте аккаунт Scarlex</p>
+        <div class="auth-error" id="registerError"></div>
+
+        <!-- Referral banner (shown only when ?ref=CODE is in URL) -->
+        <div id="refBanner" style="display:none;background:linear-gradient(135deg,rgba(115,240,188,0.10),rgba(115,240,188,0.02));border:1px solid rgba(115,240,188,0.3);border-radius:12px;padding:14px;margin-bottom:18px">
+          <div style="color:#73f0bc;font-weight:700;font-size:0.92rem;margin-bottom:4px">🎁 Вас пригласил <span id="refBannerUser">друг</span></div>
+          <div style="color:rgba(255,255,255,0.8);font-size:0.84rem;line-height:1.5">После подтверждения email вы получите <strong style="color:#73f0bc">+50 ₽</strong> на баланс</div>
+        </div>
+
+        <!-- Step 1: Email verification -->
+        <div id="regStep1">
+          <!-- Honeypot: hidden field. Real users never fill this; bots auto-fill all inputs.
+               If non-empty server-side, we pretend success but reject silently. -->
+          <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
+            <label for="hp_website">Website (leave empty)</label>
+            <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regEmail">Email</label>
+            <input class="form-input" type="email" id="regEmail" placeholder="you@example.com" required>
+          </div>
+          <button class="auth-btn" type="button" id="regSendCodeBtn" onclick="sendVerifyCode()">Отправить код</button>
+        </div>
+
+        <!-- Step 2: Enter code -->
+        <div id="regStep2" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div style="color:#fff;font-size:0.9rem;padding:10px 0 4px;" id="regEmailDisplay"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regCode">Код из письма</label>
+            <input class="form-input" type="text" id="regCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="letter-spacing:6px;text-align:center;font-size:1.3rem;font-weight:700;">
+          </div>
+          <button class="auth-btn" type="button" id="regVerifyBtn" onclick="verifyCode()">Подтвердить</button>
+          <div style="text-align:center;margin-top:10px;">
+            <a style="color:var(--text-secondary);font-size:0.82rem;cursor:pointer;" id="regResendLink" onclick="sendVerifyCode()">Отправить повторно</a>
+          </div>
+        </div>
+
+        <!-- Step 3: Remaining fields -->
+        <div id="regStep3" style="display:none">
+          <div class="form-group">
+            <label class="form-label" for="regUsername">Имя пользователя</label>
+            <input class="form-input" type="text" id="regUsername" placeholder="username" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regPassword">Пароль</label>
+            <div class="password-wrap">
+              <input class="form-input" type="password" id="regPassword" placeholder="••••••••" required>
+              <button type="button" class="password-toggle" data-toggle="regPassword" aria-label="Показать пароль">
+                <svg class="eye-on" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+                <svg class="eye-off" viewBox="0 0 24 24" fill="none"><path d="M2 2l20 20M6.7 6.7C3.6 8.7 2 12 2 12s3.5 7 10 7c2.1 0 3.9-.6 5.3-1.4M9.9 5.1C10.6 5 11.3 5 12 5c6.5 0 10 7 10 7-.5.9-1.2 2-2.2 3M9.5 9.5a3.5 3.5 0 005 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regPasswordConfirm">Подтвердите пароль</label>
+            <input class="form-input" type="password" id="regPasswordConfirm" placeholder="••••••••" required>
+          </div>
+
+          <button class="auth-btn" type="submit">Создать аккаунт</button>
+        </div>
+
+        <div class="auth-divider"><span>или</span></div>
+        <button type="button" class="tg-btn" onclick="telegramLogin()">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.28-.02-.12.03-2.02 1.28-5.69 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.09-.49-.84-.28-1.51-.42-1.45-.89.03-.25.38-.5 1.04-.76 4.09-1.78 6.81-2.96 8.18-3.52 3.9-1.62 4.7-1.9 5.23-1.91.12 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .38z" fill="currentColor"/></svg>
+          Войти через Telegram
+        </button>
+
+        <div class="auth-switch">
+          Уже есть аккаунт? <button type="button" class="linklike" onclick="switchForm('login')">Войти</button>
+        </div>
+
+        <div style="margin-top:14px;text-align:center;font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;line-height:1.5">
+          Защищено reCAPTCHA · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:underline">Privacy</a> · <a href="https://policies.google.com/terms" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:underline">Terms</a>
+        </div>
+      </form>
+    </div>
+
+    <a class="auth-back" href="index.html">← На главную</a>
+  </div>
+
+  <script>
+    function switchForm(to) {
+      document.getElementById('loginForm').classList.remove('is-active');
+      document.getElementById('registerForm').classList.remove('is-active');
+      document.getElementById('loginError').className = 'auth-error';
+      document.getElementById('registerError').className = 'auth-error';
+      if (to === 'register') {
+        // Reset steps
+        document.getElementById('regStep1').style.display = 'block';
+        document.getElementById('regStep2').style.display = 'none';
+        document.getElementById('regStep3').style.display = 'none';
+        var btn = document.getElementById('regSendCodeBtn');
+        btn.textContent = 'Отправить код'; btn.disabled = false;
+        _regVerifiedEmail = '';
+        document.getElementById('registerForm').classList.add('is-active');
+      } else {
+        document.getElementById('loginForm').classList.add('is-active');
+      }
+    }
+
+    /* ── Referral code capture from ?ref=CODE ── */
+    window.__refCode = '';
+    (function captureRefCode() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var code = (params.get('ref') || '').trim().toUpperCase();
+        if (!code) {
+          // Fallback: persisted from previous visit
+          var stored = localStorage.getItem('scarlex_ref_code');
+          if (stored) code = stored;
+        }
+        if (!code) return;
+        // Validate against backend
+        fetch('api/referrals.php?action=lookup_by_code&code=' + encodeURIComponent(code))
+          .then(function(r){ return r.json(); })
+          .then(function(d) {
+            if (!d.ok) return;
+            window.__refCode = code;
+            try { localStorage.setItem('scarlex_ref_code', code); } catch (e) {}
+            var banner = document.getElementById('refBanner');
+            var userEl = document.getElementById('refBannerUser');
+            if (banner && userEl) {
+              userEl.textContent = '@' + (d.referrer_username || 'друг');
+              banner.style.display = 'block';
+            }
+            // Auto-switch to register form so the user sees the banner
+            if (!document.getElementById('registerForm').classList.contains('is-active')) {
+              switchForm('register');
+            }
+          })
+          .catch(function(){});
+      } catch (e) {}
+    })();
+
+    function showError(id, msg) {
+      var el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = 'auth-error visible';
+    }
+
+    document.querySelectorAll('.password-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var input = document.getElementById(this.getAttribute('data-toggle'));
+        if (input.type === 'password') {
+          input.type = 'text';
+          this.classList.add('is-shown');
+        } else {
+          input.type = 'password';
+          this.classList.remove('is-shown');
+        }
+      });
+    });
+
+    function telegramLogin() {
+      openTgLoginModal();
+    }
+
+    // ── Login via Telegram (deep-link flow) ─────────────────────────
+    var tgPoll = { token: null, timer: null, deadline: 0 };
+
+    function openTgLoginModal() {
+      closeTgLoginModal();
+      var modal = document.createElement('div');
+      modal.id = 'tgLoginModal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);'
+        + 'display:flex;align-items:center;justify-content:center;padding:20px';
+      modal.innerHTML =
+        '<div style="background:#15151c;border:1px solid #26262e;border-radius:14px;padding:28px;'
+        + 'width:min(380px,100%);text-align:center;color:#e7e7ea;font-family:inherit;position:relative">'
+        +   '<button type="button" id="tgLoginClose" style="position:absolute;top:10px;right:14px;'
+        +     'background:none;border:0;color:#888;font-size:22px;cursor:pointer">×</button>'
+        +   '<h3 style="margin:0 0 8px;font-size:18px">Войти через Telegram</h3>'
+        +   '<p style="margin:0 0 16px;font-size:13px;color:#9a9aa6;line-height:1.5">'
+        +     'Открой <b>@scarlex_bot</b> и нажми <b>Start</b>.<br>Сайт залогинит тебя автоматически.</p>'
+        +   '<div id="tgLoginQr" style="background:#fff;padding:12px;border-radius:10px;display:inline-block;margin-bottom:14px"></div>'
+        +   '<div><a id="tgLoginOpenBtn" href="#" target="_blank" rel="noopener" '
+        +     'style="display:inline-block;background:#229ED9;color:#fff;padding:11px 22px;border-radius:10px;'
+        +     'text-decoration:none;font-weight:600;font-size:14px">🚀 Открыть Telegram</a></div>'
+        +   '<div id="tgLoginStatus" style="margin-top:14px;font-size:12px;color:#9a9aa6;min-height:18px">⏳ Ожидание подтверждения…</div>'
+        + '</div>';
+      document.body.appendChild(modal);
+      document.getElementById('tgLoginClose').onclick = closeTgLoginModal;
+      modal.addEventListener('click', function(e){ if (e.target === modal) closeTgLoginModal(); });
+
+      fetch('/api/tg_login_init.php', { method: 'POST', credentials: 'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || !d.ok) { setTgStatus('❌ Не удалось создать ссылку', true); return; }
+          tgPoll.token = d.token;
+          tgPoll.deadline = Date.now() + (d.ttl * 1000);
+          var openBtn = document.getElementById('tgLoginOpenBtn');
+          openBtn.href = d.deep_link;
+          // Render QR via external lightweight service (svg, no JS lib).
+          var qrImg = document.createElement('img');
+          qrImg.alt = 'QR';
+          qrImg.width = 200; qrImg.height = 200;
+          qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data='
+            + encodeURIComponent(d.deep_link);
+          document.getElementById('tgLoginQr').appendChild(qrImg);
+          tgPoll.timer = setInterval(pollTgLogin, 2000);
+          pollTgLogin();
+        })
+        .catch(function(){ setTgStatus('❌ Сеть недоступна', true); });
+    }
+
+    function setTgStatus(text, isErr) {
+      var el = document.getElementById('tgLoginStatus');
+      if (!el) return;
+      el.textContent = text;
+      el.style.color = isErr ? '#f87171' : '#9a9aa6';
+    }
+
+    function pollTgLogin() {
+      if (!tgPoll.token) return;
+      if (Date.now() > tgPoll.deadline) {
+        setTgStatus('⌛ Ссылка истекла. Закрой окно и попробуй снова.', true);
+        clearInterval(tgPoll.timer); tgPoll.timer = null;
+        return;
+      }
+      fetch('/api/tg_login_check.php?token=' + encodeURIComponent(tgPoll.token),
+            { credentials: 'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d) return;
+          if (d.status === 'logged_in') {
+            clearInterval(tgPoll.timer); tgPoll.timer = null;
+            setTgStatus('✅ Вход выполнен, переходим…');
+            setTimeout(function(){ window.location.href = '/dashboard.html'; }, 500);
+          } else if (d.status === 'expired') {
+            clearInterval(tgPoll.timer); tgPoll.timer = null;
+            setTgStatus('⌛ Ссылка истекла. Закрой окно и попробуй снова.', true);
+          } else if (d.status === 'consumed') {
+            clearInterval(tgPoll.timer); tgPoll.timer = null;
+            setTgStatus('Эта ссылка уже использована.', true);
+          } else if (!d.ok && d.error) {
+            setTgStatus('❌ ' + d.error, true);
+          }
+        })
+        .catch(function(){ /* silent retry */ });
+    }
+
+    function closeTgLoginModal() {
+      if (tgPoll.timer) { clearInterval(tgPoll.timer); tgPoll.timer = null; }
+      tgPoll.token = null;
+      var m = document.getElementById('tgLoginModal');
+      if (m) m.remove();
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var email = document.getElementById('loginEmail').value.trim();
+      var password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        showError('loginError', 'Введите email/логин и пароль');
+        return;
+      }
+
+      var btn = this.querySelector('.auth-btn');
+      btn.textContent = 'Вход...';
+      btn.disabled = true;
+      fetch('api/auth.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'login',
+          email: email,
+          password: password
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          window.location.href = 'dashboard.html';
+        } else {
+          showError('loginError', data.error || 'Ошибка входа');
+          btn.textContent = 'Войти';
+          btn.disabled = false;
+        }
+      })
+      .catch(function() {
+        showError('loginError', 'Ошибка соединения с сервером');
+        btn.textContent = 'Войти';
+        btn.disabled = false;
+      });
+    });
+
+    var _regVerifiedEmail = '';
+
+    var RECAPTCHA_SITE_KEY = '6LeLxO0sAAAAADwpQdJgmPMhVwRsaYGhwQV-U4_z';
+
+    function sendVerifyCode() {
+      var email = document.getElementById('regEmail').value.trim();
+      if (!email) { showError('registerError', 'Введите email'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('registerError', 'Некорректный email'); return; }
+
+      var btn = document.getElementById('regSendCodeBtn');
+      btn.textContent = 'Отправка...';
+      btn.disabled = true;
+      document.getElementById('registerError').className = 'auth-error';
+
+      if (typeof grecaptcha === 'undefined' || !grecaptcha.execute) {
+        showError('registerError', 'reCAPTCHA не загрузилась. Проверьте интернет/блокировщик.');
+        btn.textContent = 'Отправить код'; btn.disabled = false;
+        return;
+      }
+
+      var hp = (document.getElementById('hp_website') || {}).value || '';
+
+      grecaptcha.ready(function() {
+        grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'send_code' }).then(function(token) {
+          fetch('api/verify_email.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'send_code', email: email, recaptcha_token: token, website: hp })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.ok) {
+              document.getElementById('regStep1').style.display = 'none';
+              document.getElementById('regStep2').style.display = 'block';
+              document.getElementById('regEmailDisplay').textContent = email;
+              document.getElementById('regCode').focus();
+            } else {
+              showError('registerError', data.error || 'Ошибка отправки');
+              btn.textContent = 'Отправить код';
+              btn.disabled = false;
+            }
+          })
+          .catch(function() {
+            showError('registerError', 'Ошибка соединения');
+            btn.textContent = 'Отправить код';
+            btn.disabled = false;
+          });
+        }).catch(function() {
+          showError('registerError', 'reCAPTCHA не отработала. Попробуйте ещё раз.');
+          btn.textContent = 'Отправить код'; btn.disabled = false;
+        });
+      });
+    }
+
+    function verifyCode() {
+      var email = document.getElementById('regEmail').value.trim();
+      var code = document.getElementById('regCode').value.trim();
+      if (!code || code.length !== 6) { showError('registerError', 'Введите 6-значный код'); return; }
+
+      var btn = document.getElementById('regVerifyBtn');
+      btn.textContent = 'Проверка...';
+      btn.disabled = true;
+      document.getElementById('registerError').className = 'auth-error';
+
+      fetch('api/verify_email.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify_code', email: email, code: code })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          _regVerifiedEmail = email;
+          document.getElementById('regStep2').style.display = 'none';
+          document.getElementById('regStep3').style.display = 'block';
+          document.getElementById('regUsername').focus();
+        } else {
+          showError('registerError', data.error || 'Неверный код');
+          btn.textContent = 'Подтвердить';
+          btn.disabled = false;
+        }
+      })
+      .catch(function() {
+        showError('registerError', 'Ошибка соединения');
+        btn.textContent = 'Подтвердить';
+        btn.disabled = false;
+      });
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var email = _regVerifiedEmail;
+      var username = document.getElementById('regUsername').value.trim();
+      var password = document.getElementById('regPassword').value;
+      var confirm = document.getElementById('regPasswordConfirm').value;
+
+      if (!email) { showError('registerError', 'Email не подтверждён'); return; }
+      if (!username || !password || !confirm) {
+        showError('registerError', 'Заполните все поля');
+        return;
+      }
+      if (username.length < 3 || username.length > 50) {
+        showError('registerError', 'Имя пользователя: от 3 до 50 символов');
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        showError('registerError', 'Имя пользователя: только латиница, цифры, _ и -');
+        return;
+      }
+      if (password.length < 6) {
+        showError('registerError', 'Пароль минимум 6 символов');
+        return;
+      }
+      if (password.length > 72) {
+        showError('registerError', 'Пароль максимум 72 символа');
+        return;
+      }
+      if (password !== confirm) {
+        showError('registerError', 'Пароли не совпадают');
+        return;
+      }
+
+      var btn = this.querySelector('.auth-btn');
+      btn.textContent = 'Создание...';
+      btn.disabled = true;
+      fetch('api/auth.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'register',
+          email: email,
+          username: username,
+          password: password,
+          password_confirm: confirm,
+          ref_code: (window.__refCode || '')
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          window.location.href = 'dashboard.html';
+        } else {
+          showError('registerError', data.error || 'Ошибка регистрации');
+          btn.textContent = 'Создать аккаунт';
+          btn.disabled = false;
+        }
+      })
+      .catch(function() {
+        showError('registerError', 'Ошибка соединения с сервером');
+        btn.textContent = 'Создать аккаунт';
+        btn.disabled = false;
+      });
+    });
+  </script>
+
+</body>
+</html>

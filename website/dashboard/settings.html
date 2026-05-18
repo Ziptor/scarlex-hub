@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Настройки — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.toggle{position:relative;width:42px;height:24px;background:rgba(255,255,255,.1);border-radius:12px;cursor:pointer;transition:background .2s}
+.toggle.on{background:var(--d-success)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(18px)}
+.pref-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--d-border)}
+.pref-row:last-child{border-bottom:none}
+.pref-row .lbl{font-weight:600;color:var(--d-white)}
+.pref-row .desc{color:var(--d-muted);font-size:12.5px;margin-top:2px}
+.field{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.field .lbl{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--d-muted)}
+input[type=time].d-input{font-family:'JetBrains Mono',ui-monospace,monospace;max-width:140px}
+.ip-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--d-border);border-radius:8px;margin-bottom:6px;background:var(--d-s2);font-size:13px}
+.ip-row .ip{font-family:'JetBrains Mono',ui-monospace,monospace;color:var(--d-text)}
+.ip-row .meta{color:var(--d-muted);font-size:11.5px;margin-left:10px}
+.ip-row button{background:transparent;border:1px solid var(--d-border-strong);color:var(--d-muted);padding:4px 10px;border-radius:6px;font-size:11.5px;cursor:pointer;transition:.15s}
+.ip-row button:hover{color:var(--d-text);border-color:var(--d-text)}
+.ip-row.allowed{background:rgba(124,255,182,.06);border-color:rgba(124,255,182,.25)}
+.ip-row.allowed button{color:var(--d-danger);border-color:rgba(255,107,107,.3)}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">Аккаунт</div><h1 class="d-page-title">Настройки</h1>
+      <div class="d-page-sub">Безопасность, уведомления и активные сессии.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <!-- ─── Email + Daily Report Time ─── -->
+  <section class="d-grid d-grid-2" style="margin-bottom:20px">
+    <div class="d-card">
+      <h3>Смена email</h3>
+      <div class="desc">Новый адрес — для входа и уведомлений.</div>
+
+      <div class="field">
+        <label class="lbl">Текущий</label>
+        <input class="d-input" id="curEmail" readonly>
+      </div>
+      <div class="field">
+        <label class="lbl">Новый email</label>
+        <input class="d-input" type="email" id="newEmail" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label class="lbl">Текущий пароль</label>
+        <input class="d-input" type="password" id="emailPass" placeholder="••••••••">
+      </div>
+      <div style="margin-top:14px"><button class="d-btn primary" id="btnSaveEmail">Сменить email</button></div>
+    </div>
+
+    <div class="d-card">
+      <h3>Ежедневный отчёт</h3>
+      <div class="desc">Сводка за день: расход токенов, баланс, новые рефералы.</div>
+
+      <div class="field">
+        <label class="lbl">Время отправки (МСК)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="d-input" type="time" id="dailyTime" value="20:00">
+          <button class="d-btn primary sm" id="btnSaveDailyTime">Сохранить</button>
+        </div>
+        <div class="desc" style="margin-top:8px">Включить/выключить — в блоке «Уведомления» ниже.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── IP-защита ключей + регенерация ─── -->
+  <section class="d-card" style="margin-bottom:20px">
+    <h3>🔐 Безопасность API-ключей</h3>
+    <div class="desc">IP-whitelist: запросы с других адресов <b style="color:var(--d-danger)">блокируются (HTTP 403)</b> и в Telegram приходит алерт. Пустой список — фильтрация выключена. Поддержка: IPv4 и CIDR (например <code>10.0.0.0/8</code>).</div>
+
+    <div class="field">
+      <label class="lbl">Ключ</label>
+      <select class="d-input" id="keySelect" style="max-width:480px"><option value="">Загрузка…</option></select>
+    </div>
+
+    <div id="ipPanel" style="display:none;margin-top:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div>
+          <div class="lbl" style="font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px">Откуда юзался (топ-20)</div>
+          <div id="seenIps"><div class="d-empty">Ещё не использовался</div></div>
+          <div style="margin-top:10px"><button class="d-btn sm" id="btnMyIp">Узнать мой IP</button> <span id="myIpHint" style="color:var(--d-muted);font-size:12px;margin-left:6px"></span></div>
+        </div>
+        <div>
+          <div class="lbl" style="font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--d-muted);margin-bottom:8px">Разрешённые IP / CIDR</div>
+          <div id="allowedIps"><div class="d-empty" id="emptyAllowed">Whitelist пуст — фильтрация выключена</div></div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <input class="d-input" id="newIpInput" placeholder="1.2.3.4 или 5.6.7.0/24" style="flex:1">
+            <button class="d-btn sm" id="btnAddIp">+ Добавить</button>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="d-btn primary sm" id="btnSaveWhitelist">Сохранить</button>
+            <button class="d-btn sm" id="btnClearWhitelist">Очистить</button>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--d-border);margin:18px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:600;color:var(--d-white)">🔄 Регенерация ключа</div>
+          <div class="desc" style="margin-top:2px">Старое значение перестанет работать. Лимиты, расход, IP-список и название сохранятся.</div>
+        </div>
+        <button class="d-btn danger sm" id="btnRegenerate">Регенерировать ключ</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="d-grid d-grid-2">
+    <div class="d-card">
+      <h3>Уведомления</h3>
+      <div class="desc">Что присылать на email и в Telegram.</div>
+      <div id="prefsBox" style="margin-top:12px"><div class="d-empty">Загрузка…</div></div>
+    </div>
+
+    <div class="d-card">
+      <h3>Активные сессии</h3>
+      <div class="desc">Устройства, на которых ты залогинен.</div>
+      <div id="sessBox" style="margin-top:12px"><div class="d-empty">Загрузка…</div></div>
+      <div style="margin-top:14px"><button class="d-btn danger sm" id="btnRevokeAll">Завершить все остальные</button></div>
+    </div>
+  </section>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+var PREFS = [
+  ['notify_login','Вход в аккаунт','Уведомлять при входе с нового устройства'],
+  ['notify_purchase','Покупки','Сообщать о покупках и пополнениях ключей'],
+  ['notify_low_balance','Низкий баланс','Когда баланс ниже порога'],
+  ['notify_key_exhausted','Ключ исчерпан','Когда токены ключа закончились'],
+  ['notify_referral','Рефералы','Регистрации и бонусы'],
+  ['notify_achievement','Достижения','Получение нового бейджа'],
+  ['notify_daily_report','Ежедневный отчёт','Сводка за день']
+];
+
+function renderPrefs(p){
+  var html = PREFS.map(function(pp){
+    var k = pp[0], on = +p[k] === 1;
+    return '<div class="pref-row"><div><div class="lbl">'+pp[1]+'</div><div class="desc">'+pp[2]+'</div></div>'
+      + '<div class="toggle '+(on?'on':'')+'" data-k="'+k+'"></div></div>';
+  }).join('');
+  document.getElementById('prefsBox').innerHTML = html;
+  document.querySelectorAll('.toggle').forEach(function(t){
+    t.onclick = function(){
+      var k = t.dataset.k, val = t.classList.contains('on') ? 0 : 1;
+      var body = {action:'update_prefs'}; body[k] = val;
+      SCX.api('/api/settings.php', body).then(function(r){
+        if (r && r.ok) { t.classList.toggle('on'); SCX.toast('Сохранено'); }
+        else SCX.toast(r && r.error || 'Ошибка');
+      });
+    };
+  });
+}
+
+function renderSess(arr){
+  if (!arr.length) { document.getElementById('sessBox').innerHTML = '<div class="d-empty">Сессий нет</div>'; return; }
+  var html = arr.map(function(s){
+    var cur = s.is_current ? '<span class="d-pill ok">Текущая</span>' : '';
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--d-border)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">'
+      + '<div><div style="font-weight:600;color:var(--d-white)">'+SCX.escapeHtml(s.browser)+' · '+SCX.escapeHtml(s.os)+' '+cur+'</div>'
+      + '<div style="font-size:12px;color:var(--d-muted)">'+SCX.escapeHtml(s.ip||'')+' · последняя активность '+SCX.fmtDate(s.last_seen)+'</div></div>'
+      + (s.is_current?'':'<button class="d-btn sm danger" data-id="'+s.id+'">Завершить</button>') + '</div></div>';
+  }).join('');
+  document.getElementById('sessBox').innerHTML = html;
+  document.querySelectorAll('#sessBox button[data-id]').forEach(function(b){
+    b.onclick = function(){
+      SCX.api('/api/settings.php', {action:'revoke_session', session_id:b.dataset.id}).then(function(r){
+        if (r && r.ok) load(); else SCX.toast(r && r.error || 'Ошибка');
+      });
+    };
+  });
+}
+
+function load(){
+  SCX.api('/api/settings.php?action=get_all').then(function(d){
+    if (!d || !d.ok) return;
+    if (d.user) {
+      document.getElementById('curEmail').value = d.user.email || '';
+    }
+    if (d.prefs) {
+      renderPrefs(d.prefs);
+      var t = (d.prefs.notify_daily_report_time || '10:00').slice(0,5);
+      document.getElementById('dailyTime').value = t;
+    }
+    if (d.sessions) renderSess(d.sessions);
+  });
+}
+
+// ─── Change email ───
+function saveEmail(){
+  var newEmail = document.getElementById('newEmail').value.trim();
+  var pass = document.getElementById('emailPass').value;
+  if (!newEmail || !pass) { SCX.toast('Заполни оба поля'); return; }
+  SCX.api('/api/settings.php', {action:'change_email', new_email:newEmail, password:pass}).then(function(r){
+    if (r && r.ok) {
+      SCX.toast('Email изменён');
+      document.getElementById('curEmail').value = r.new_email || newEmail;
+      document.getElementById('newEmail').value = '';
+      document.getElementById('emailPass').value = '';
+    } else SCX.toast(r && r.error || 'Ошибка');
+  });
+}
+
+// ─── Daily report time ───
+function saveDailyTime(){
+  var t = document.getElementById('dailyTime').value;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) { SCX.toast('Формат HH:MM'); return; }
+  SCX.api('/api/settings.php', {action:'update_prefs', notify_daily_report_time:t}).then(function(r){
+    if (r && r.ok) SCX.toast('Время сохранено');
+    else SCX.toast(r && r.error || 'Ошибка');
+  });
+}
+
+// ─── IP-whitelist ───
+var _curKey = null;     // selected key object {key_value, label, key_preview}
+var _userKeys = [];     // all keys of user
+var _allowedIps = [];   // current whitelist for selected key
+var _seenIps = [];      // IPs seen in logs for selected key
+
+function loadUserKeys(){
+  SCX.api('/api/keys.php?action=list').then(function(d){
+    if (!d || !d.ok || !d.keys) {
+      document.getElementById('keySelect').innerHTML = '<option value="">Нет ключей</option>';
+      return;
+    }
+    _userKeys = d.keys;
+    var sel = document.getElementById('keySelect');
+    var opts = '<option value="">— Выберите ключ —</option>';
+    d.keys.forEach(function(k){
+      var preview = (k.key_value || '').slice(0, 12) + '…' + (k.key_value || '').slice(-4);
+      opts += '<option value="'+SCX.escapeHtml(k.key_value||'')+'">'+SCX.escapeHtml(k.label||'без названия')+' · '+preview+'</option>';
+    });
+    sel.innerHTML = opts;
+    sel.onchange = onKeyChange;
+  });
+}
+
+function onKeyChange(){
+  var v = document.getElementById('keySelect').value;
+  if (!v) { document.getElementById('ipPanel').style.display = 'none'; _curKey = null; return; }
+  _curKey = _userKeys.find(function(k){ return k.key_value === v; });
+  document.getElementById('ipPanel').style.display = 'block';
+  loadKeyIps(v);
+}
+
+function loadKeyIps(keyValue){
+  document.getElementById('seenIps').innerHTML = '<div class="d-empty">Загрузка…</div>';
+  SCX.api('/api/keys.php', {action:'key_ips', key:keyValue}).then(function(d){
+    if (!d || !d.ok) {
+      document.getElementById('seenIps').innerHTML = '<div class="d-empty">'+(d&&d.error||'Ошибка')+'</div>';
+      return;
+    }
+    _seenIps = d.seen || [];
+    _allowedIps = d.allowed_ips || [];
+    renderSeenIps();
+    renderAllowedIps();
+  });
+}
+
+function renderSeenIps(){
+  if (!_seenIps.length) {
+    document.getElementById('seenIps').innerHTML = '<div class="d-empty">Ещё не использовался</div>';
+    return;
+  }
+  var html = _seenIps.map(function(s){
+    var inWl = _allowedIps.indexOf(s.ip) !== -1;
+    var btn = inWl
+      ? '<button disabled style="opacity:.4">В whitelist</button>'
+      : '<button data-ip="'+SCX.escapeHtml(s.ip)+'">+ Добавить</button>';
+    return '<div class="ip-row"><div><span class="ip">'+SCX.escapeHtml(s.ip)+'</span>'
+      + '<span class="meta">'+s.count+' зап. · '+SCX.fmtDate(s.last_seen)+'</span></div>'
+      + btn + '</div>';
+  }).join('');
+  document.getElementById('seenIps').innerHTML = html;
+  document.querySelectorAll('#seenIps button[data-ip]').forEach(function(b){
+    b.onclick = function(){ addIp(b.dataset.ip); };
+  });
+}
+
+function renderAllowedIps(){
+  if (!_allowedIps.length) {
+    document.getElementById('allowedIps').innerHTML = '<div class="d-empty">Whitelist пуст — алерты отключены</div>';
+    return;
+  }
+  document.getElementById('allowedIps').innerHTML = _allowedIps.map(function(ip,i){
+    return '<div class="ip-row allowed"><div><span class="ip">'+SCX.escapeHtml(ip)+'</span></div>'
+      + '<button data-idx="'+i+'">×</button></div>';
+  }).join('');
+  document.querySelectorAll('#allowedIps button[data-idx]').forEach(function(b){
+    b.onclick = function(){ _allowedIps.splice(+b.dataset.idx, 1); renderAllowedIps(); renderSeenIps(); };
+  });
+}
+
+function validIpv4Cidr(s){
+  s = (s||'').trim();
+  if (!s) return false;
+  var parts = s.split('/');
+  if (parts.length > 2) return false;
+  var ip = parts[0];
+  var octets = ip.split('.');
+  if (octets.length !== 4) return false;
+  for (var i=0;i<4;i++){
+    if (!/^\d+$/.test(octets[i])) return false;
+    var n = +octets[i];
+    if (n < 0 || n > 255) return false;
+    if (octets[i].length > 1 && octets[i][0] === '0') return false; // no leading zeros
+  }
+  if (parts.length === 2){
+    if (!/^\d+$/.test(parts[1])) return false;
+    var p = +parts[1];
+    if (p < 0 || p > 32) return false;
+  }
+  return true;
+}
+
+function addIp(ip){
+  ip = (ip||'').trim();
+  if (!ip) return;
+  if (!validIpv4Cidr(ip)) { SCX.toast('Невалидный IPv4 или CIDR'); return; }
+  if (_allowedIps.indexOf(ip) !== -1) { SCX.toast('Уже в whitelist'); return; }
+  _allowedIps.push(ip);
+  renderAllowedIps();
+  renderSeenIps();
+}
+
+function saveWhitelist(){
+  if (!_curKey) return;
+  SCX.api('/api/keys.php', {action:'set_key_whitelist', key:_curKey.key_value, allowed_ips:_allowedIps}).then(function(r){
+    if (r && r.ok) SCX.toast('Whitelist сохранён');
+    else SCX.toast(r && r.error || 'Ошибка');
+  });
+}
+
+function showMyIp(){
+  // Use a public IP-echo endpoint that returns JSON {ip: "..."}
+  fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){
+    var ip = (d && d.ip) || '';
+    if (!ip) { SCX.toast('Не удалось узнать IP'); return; }
+    var hint = document.getElementById('myIpHint');
+    hint.innerHTML = 'Ваш IP: <b style="color:var(--d-white);font-family:JetBrains Mono,monospace">'+SCX.escapeHtml(ip)+'</b> <a href="#" id="addMyIp" style="margin-left:8px">+ добавить</a>';
+    var add = document.getElementById('addMyIp');
+    if (add) add.onclick = function(e){ e.preventDefault(); addIp(ip); };
+  }).catch(function(){ SCX.toast('Не удалось узнать IP'); });
+}
+
+function regenerateKey(){
+  if (!_curKey) return;
+  if (!confirm('Старое значение ключа перестанет работать СРАЗУ. Лимиты, расход и IP-список сохранятся.\n\nПродолжить?')) return;
+  SCX.api('/api/keys.php', {action:'regenerate', id:_curKey.id}).then(function(r){
+    if (!r || !r.ok) { SCX.toast(r && r.error || 'Ошибка регенерации'); return; }
+    var nk = r.new_key || '';
+    // Build a one-time reveal modal
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+    modal.innerHTML = '<div style="background:var(--d-s1);border:1px solid var(--d-border);border-radius:14px;padding:24px;max-width:560px;width:100%">'
+      + '<h3 style="margin:0 0 10px 0">🔑 Новый ключ</h3>'
+      + '<div class="desc">Скопируй и сохрани — больше он не будет показан в открытом виде.</div>'
+      + '<div style="margin:14px 0;padding:12px;background:var(--d-s2);border:1px solid var(--d-border);border-radius:8px;font-family:JetBrains Mono,monospace;font-size:13px;word-break:break-all;color:var(--d-white)">' + SCX.escapeHtml(nk) + '</div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+      + '<button class="d-btn sm" id="copyNewKey">Скопировать</button>'
+      + '<button class="d-btn primary sm" id="closeNewKey">Готово</button>'
+      + '</div></div>';
+    document.body.appendChild(modal);
+    document.getElementById('copyNewKey').onclick = function(){
+      navigator.clipboard.writeText(nk).then(function(){ SCX.toast('Скопировано'); });
+    };
+    document.getElementById('closeNewKey').onclick = function(){
+      document.body.removeChild(modal);
+      // Refresh keys list so the selector shows the new value
+      loadUserKeys();
+      document.getElementById('ipPanel').style.display = 'none';
+    };
+  });
+}
+
+SCX.boot('settings', function(){
+  load();
+  loadUserKeys();
+  document.getElementById('btnRevokeAll').onclick = function(){
+    if (!confirm('Завершить все остальные сессии?')) return;
+    SCX.api('/api/settings.php', {action:'revoke_all_other'}).then(function(r){
+      if (r && r.ok) { SCX.toast('Готово'); load(); }
+    });
+  };
+  document.getElementById('btnSaveEmail').onclick = saveEmail;
+  document.getElementById('btnSaveDailyTime').onclick = saveDailyTime;
+  document.getElementById('btnAddIp').onclick = function(){
+    var v = document.getElementById('newIpInput').value;
+    addIp(v);
+    document.getElementById('newIpInput').value = '';
+  };
+  document.getElementById('btnSaveWhitelist').onclick = saveWhitelist;
+  document.getElementById('btnClearWhitelist').onclick = function(){
+    if (!confirm('Очистить все разрешённые IP для этого ключа?')) return;
+    _allowedIps = [];
+    renderAllowedIps();
+    renderSeenIps();
+  };
+  document.getElementById('btnMyIp').onclick = showMyIp;
+  document.getElementById('btnRegenerate').onclick = regenerateKey;
+});
+</script>
+</body></html>

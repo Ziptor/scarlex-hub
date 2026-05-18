@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Документация API · Scarlex</title>
+<meta name="description" content="Scarlex API — документация по подключению. cURL, Claude Code, OpenCode, oh-my-opencode.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --bg-elev:#101010;
+    --surface:#141414;
+    --border:#1f1f1f;
+    --border-2:#2a2a2a;
+    --text:#f4f4f4;
+    --text-2:#a8a8a8;
+    --text-3:#6a6a6a;
+    --text-4:#3f3f3f;
+    --accent: oklch(0.78 0.16 145);
+    --maxw: 1280px;
+    --pad: clamp(20px, 4vw, 56px);
+    --display: 'Onest', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--display);-webkit-font-smoothing:antialiased}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+
+  .grid-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
+  }
+
+  /* NAV */
+  nav.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(10,10,10,.65);border-bottom:1px solid var(--border)}
+  .nav-inner{max-width:var(--maxw);margin:0 auto;padding:14px var(--pad);display:flex;align-items:center;gap:32px}
+  .logo img{height:40px;width:auto;display:block}
+  .nav-links{display:flex;gap:26px;margin-left:16px;color:var(--text-2);font-size:14px}
+  .nav-links a:hover{color:var(--text)}
+  .nav-spacer{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:500;font-size:14px;transition:all .15s}
+  .btn-ghost{border:1px solid var(--border-2);color:var(--text)}
+  .btn-ghost:hover{border-color:#3a3a3a;background:#161616}
+  .btn-primary{background:var(--text);color:var(--bg)}
+  .btn-primary:hover{background:#fff}
+
+  /* HERO */
+  .hero{position:relative;z-index:1;padding: 56px 0 64px;border-bottom:1px solid var(--border)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);position:relative;z-index:1}
+  .breadcrumb{
+    display:inline-flex;align-items:center;gap:14px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--text-3);
+    text-transform:uppercase;margin-bottom:28px;
+  }
+  .breadcrumb a{color:var(--text-2);transition:color .15s}
+  .breadcrumb a:hover{color:var(--text)}
+  .breadcrumb .sep{color:var(--text-4)}
+  .breadcrumb b{color:var(--text);font-weight:500}
+  h1{font-family:var(--display);font-size:clamp(48px,7vw,84px);font-weight:500;letter-spacing:-.035em;line-height:1;margin:0 0 24px}
+  h1 em{font-style:normal;font-weight:700;color:#fff}
+  .hero p.lede{font-size:clamp(16px,1.5vw,19px);color:var(--text-2);line-height:1.5;max-width:60ch;margin:0}
+  .hero p.lede b{color:var(--text);font-weight:500}
+
+  /* META CARDS */
+  .meta-grid{
+    margin-top:48px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  }
+  @media (max-width:1080px){.meta-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.meta-grid{grid-template-columns:1fr}}
+  .meta{background:var(--bg-elev);padding:22px;display:flex;flex-direction:column;gap:8px;min-height:140px}
+  .meta .cap{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--text-3);text-transform:uppercase}
+  .meta .val{font-family:var(--mono);font-size:15px;color:var(--text);font-weight:500;letter-spacing:-.005em;word-break:break-word}
+  .meta .sub{font-size:12px;color:var(--text-3);line-height:1.45;margin-top:auto}
+  .meta a.linkout{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-family:var(--mono);font-size:12px;margin-top:auto}
+  .meta a.linkout:hover{text-decoration:underline}
+
+  /* BANNER */
+  .doc-banner{
+    margin-top:48px;
+    border:1px solid var(--border);border-radius:14px;
+    background:linear-gradient(180deg,#0e0e0e,#0a0a0a);
+    padding:32px;
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+  }
+  @media (max-width:780px){.doc-banner{grid-template-columns:1fr}}
+  .doc-banner .lbl{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+  .doc-banner h3{margin:0 0 8px;font-size:22px;font-weight:500;letter-spacing:-.01em}
+  .doc-banner p{margin:0;color:var(--text-2);font-size:14px;line-height:1.55;max-width:56ch}
+
+  /* DOCS BODY */
+  .docs{position:relative;z-index:1;padding: 80px 0 120px}
+  .docs-grid{display:grid;grid-template-columns:240px 1fr;gap:64px}
+  @media (max-width:1000px){.docs-grid{grid-template-columns:1fr}}
+
+  /* sidebar */
+  aside.sidebar{position:sticky;top:90px;align-self:start}
+  @media (max-width:1000px){aside.sidebar{position:relative;top:0;margin-bottom:36px;border:1px solid var(--border);border-radius:14px;padding:18px;background:var(--bg-elev)}}
+  .sidebar .lbl{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.18em;text-transform:uppercase;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .sidebar ul{list-style:none;padding:14px 0 0;margin:0}
+  .sidebar li{padding:8px 0}
+  .sidebar a{color:var(--text-2);font-size:14px;display:flex;align-items:center;gap:10px;transition:color .15s}
+  .sidebar a:hover{color:var(--text)}
+  .sidebar a.active{color:var(--text);font-weight:500}
+  .sidebar a.active::before{content:"";width:3px;height:14px;background:var(--text);border-radius:2px;margin-left:-3px}
+  .sidebar a::before{content:"";width:3px;height:14px;background:transparent;border-radius:2px}
+
+  /* sections */
+  .doc-section{padding-bottom:80px;border-bottom:1px solid var(--border);margin-bottom:80px;scroll-margin-top:100px}
+  .doc-section:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+  .doc-section h2{font-size:clamp(32px,4vw,48px);font-weight:500;letter-spacing:-.025em;line-height:1.05;margin:0 0 18px}
+  .doc-section h3{font-size:20px;font-weight:500;letter-spacing:-.005em;margin:36px 0 14px}
+  .doc-section p{color:var(--text-2);font-size:15px;line-height:1.65;margin:0 0 16px;max-width:70ch}
+  .doc-section p .mono{font-family:var(--mono);color:var(--text);background:#181818;padding:2px 6px;border-radius:4px;font-size:13px}
+  .doc-section a{color:var(--text);text-decoration:underline;text-decoration-color:var(--border-2);text-underline-offset:3px}
+  .doc-section a:hover{text-decoration-color:var(--text)}
+
+  /* code block */
+  .code-block{
+    margin:18px 0 24px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg-elev);
+  }
+  .code-head{
+    display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0c0c0c;
+    border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--text-3);text-transform:uppercase;
+  }
+  .code-head .lang{color:var(--text-2)}
+  .code-head .copy{margin-left:auto;color:var(--text-3);cursor:pointer;padding:4px 10px;border:1px solid var(--border-2);border-radius:5px;transition:all .15s;font-size:10px}
+  .code-head .copy:hover{color:var(--text);border-color:#3a3a3a;background:#161616}
+  .code-head .copy.ok{color:var(--accent);border-color:color-mix(in oklch, var(--accent) 30%, transparent)}
+  .code-block pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--text-2);overflow:auto;white-space:pre}
+  .code-block pre .k{color:#c98aff}
+  .code-block pre .s{color:#e8c47a}
+  .code-block pre .c{color:#555}
+  .code-block pre .f{color:#fff}
+  .code-block pre .n{color:#8ad4ff}
+
+  /* tabs */
+  .tabs{
+    display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;
+    margin:16px 0 0;width:fit-content;background:var(--bg-elev);
+  }
+  .tabs button{
+    padding:10px 18px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--text-3);
+    border-right:1px solid var(--border);transition:all .15s;
+  }
+  .tabs button:last-child{border-right:0}
+  .tabs button.on{background:var(--text);color:var(--bg)}
+  .tabs button:hover:not(.on){color:var(--text);background:#161616}
+
+  /* use-case table */
+  .usecase{
+    margin:18px 0 0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg-elev);
+  }
+  .usecase .row{
+    display:grid;grid-template-columns:1.4fr 1fr;gap:24px;padding:18px 22px;border-bottom:1px solid var(--border);align-items:center;
+  }
+  .usecase .row:last-child{border-bottom:0}
+  .usecase .row:hover{background:#121212}
+  @media (max-width:680px){.usecase .row{grid-template-columns:1fr;gap:8px}}
+  .usecase .case{color:var(--text-2);font-size:14px}
+  .usecase .tools{font-family:var(--mono);font-size:12px;color:var(--text);display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+  @media (max-width:680px){.usecase .tools{justify-content:flex-start}}
+  .usecase .tools .pill{padding:4px 10px;border:1px solid var(--border-2);border-radius:999px;background:#0c0c0c}
+
+  /* models grid */
+  .models-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:18px;
+  }
+  @media (max-width:880px){.models-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.models-grid{grid-template-columns:1fr}}
+  .model{background:var(--bg-elev);padding:20px;display:flex;flex-direction:column;gap:6px;min-height:110px;transition:background .15s}
+  .model:hover{background:#161616}
+  .model .nm{font-size:16px;font-weight:500;letter-spacing:-.005em;display:flex;align-items:center;gap:10px}
+  .model .nm img{width:18px;height:18px;object-fit:contain}
+  .model .id{font-family:var(--mono);font-size:12px;color:var(--text-3);margin-top:auto}
+
+  /* support card */
+  .support{
+    margin-top:80px;padding:36px;border:1px solid var(--border);border-radius:14px;
+    background:linear-gradient(180deg,#101010,#0a0a0a);
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+  }
+  @media (max-width:780px){.support{grid-template-columns:1fr}}
+  .support h3{margin:0 0 6px;font-size:22px;font-weight:500}
+  .support p{margin:0;color:var(--text-2);font-size:14px}
+
+  /* footer */
+  footer{padding:60px 0 40px;background:#080808;position:relative;z-index:1}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
+  @media (max-width:880px){.foot-grid{grid-template-columns:1fr 1fr;gap:30px}}
+  .foot-grid h5{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3);font-weight:500;margin:0 0 16px}
+  .foot-grid ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .foot-grid a{color:var(--text-2);font-size:14px}
+  .foot-grid a:hover{color:var(--text)}
+  .foot-brand img{height:28px;display:block;margin-bottom:14px}
+  .foot-brand p{color:var(--text-3);font-size:13px;line-height:1.5;max-width:32ch;margin:0}
+  .foot-bot{
+    max-width:var(--maxw);margin: 50px auto 0;padding: 24px var(--pad) 0;border-top:1px solid var(--border);
+    display:flex;justify-content:space-between;gap:24px;color:var(--text-3);font-size:12px;font-family:var(--mono);letter-spacing:.06em;flex-wrap:wrap;
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav class="top">
+  <div class="nav-inner">
+    <a class="logo" href="https://scarlex.ru"><img src="assets/scarlex-logo.png" alt="Scarlex"></a>
+    <div class="nav-links">
+      <a href="https://scarlex.ru/#features">Возможности</a>
+      <a href="https://scarlex.ru/#pricing">Цены</a>
+      <a href="https://scarlex.ru/api-guide.html" style="color:var(--text)">Документация</a>
+      <a href="https://scarlex.ru/#faq">FAQ</a>
+    </div>
+    <div class="nav-spacer"></div>
+    <a class="btn btn-ghost" id="loginNavBtn" href="https://scarlex.ru/authorization.html">Войти</a>
+    <a class="btn btn-primary" id="ctaNavBtn" href="https://scarlex.ru/authorization.html?plan=free">Получить ключ →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="breadcrumb">
+      <a href="https://scarlex.ru/index.html">← На главную</a>
+      <span class="sep">/</span>
+      <b>SCARLEX · DOCS</b>
+    </div>
+    <h1>Документация <em>API</em></h1>
+    <p class="lede">Единый API для Anthropic Claude в трёх форматах: <b>OpenAI Chat Completions</b>, <b>OpenAI Responses</b> и <b>Anthropic Messages</b>. Подключайтесь через cURL, Claude Code, OpenCode или любой совместимый SDK — переменными окружения, без переписывания кода.</p>
+
+    <!-- META CARDS -->
+    <div class="meta-grid">
+      <div class="meta">
+        <div class="cap">BASE URL</div>
+        <div class="val">https://api.scarlex.ru</div>
+        <div class="sub">Работает без VPN в РФ</div>
+      </div>
+      <div class="meta">
+        <div class="cap">API KEY</div>
+        <div class="val">sk-scarlex-•••</div>
+        <div class="sub">1M токенов бесплатно при регистрации</div>
+        <a class="linkout" href="https://scarlex.ru/dashboard.html">→ Открыть кабинет</a>
+      </div>
+      <div class="meta">
+        <div class="cap">СОВМЕСТИМОСТЬ</div>
+        <div class="val">OpenAI · Anthropic</div>
+        <div class="sub">/chat/completions · /responses · /messages</div>
+      </div>
+      <div class="meta">
+        <div class="cap">АВТОРИЗАЦИЯ</div>
+        <div class="val">Authorization: Bearer KEY</div>
+        <div class="sub">или x-api-key для Anthropic endpoint</div>
+      </div>
+    </div>
+
+    <!-- DOC BANNER -->
+    <div class="doc-banner">
+      <div>
+        <div class="lbl">↳ ПОЛНАЯ ДОКУМЕНТАЦИЯ</div>
+        <h3>Расширенные гайды по всем IDE и SDK</h3>
+        <p>Cursor · Continue · Cline · Aider · OpenCode · Claude Code · LangChain · Vercel AI SDK — с примерами кода, конфигами под каждую среду и пошаговой настройкой. Доступны в личном кабинете.</p>
+      </div>
+      <a class="btn btn-primary btn-lg" href="https://scarlex.ru/dashboard/docs.html" style="padding:14px 22px;font-size:15px">Открыть в кабинете →</a>
+    </div>
+  </div>
+</section>
+
+<!-- DOCS BODY -->
+<section class="docs">
+  <div class="wrap">
+    <div class="docs-grid">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="lbl">// Разделы</div>
+        <ul>
+          <li><a href="#start" class="active">Быстрый старт</a></li>
+          <li><a href="#curl">cURL</a></li>
+          <li><a href="#claude-code">Claude Code</a></li>
+          <li><a href="#opencode">OpenCode</a></li>
+          <li><a href="#oh-my-opencode">oh-my-opencode</a></li>
+          <li><a href="#sdk">Python · Node SDK</a></li>
+          <li><a href="#models">Модели</a></li>
+        </ul>
+      </aside>
+
+      <!-- MAIN -->
+      <div>
+
+        <!-- QUICK START -->
+        <article class="doc-section" id="start">
+          <h2>Быстрый старт</h2>
+          <p>Scarlex — это управляемый шлюз, который понимает и <span class="mono">/v1/messages</span> от Anthropic, и <span class="mono">/v1/chat/completions</span> от OpenAI. Укажи любой SDK на базу ниже, передай ключ как <span class="mono">Authorization: Bearer</span> или <span class="mono">x-api-key</span> — этого достаточно.</p>
+
+          <h3>Базовый URL</h3>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">URL</span><button class="copy">⎘ COPY</button></div>
+            <pre>https://api.scarlex.ru/v1</pre>
+          </div>
+
+          <h3>Твой API-ключ</h3>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">KEY</span><button class="copy">⎘ COPY</button></div>
+            <pre>sk-scarlex-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</pre>
+          </div>
+          <p>Получи ключ в <a href="https://scarlex.ru/dashboard.html">личном кабинете</a> — 1M токенов в подарок при регистрации.</p>
+
+          <h3>Hello, world</h3>
+          <p>Скопируй в терминал, чтобы проверить round-trip. В примере используется модель Claude.</p>
+
+          <div class="tabs" id="hwTabs">
+            <button class="on" data-tab="anthropic">Anthropic · /v1/messages</button>
+            <button data-tab="openai">OpenAI · /v1/chat/completions</button>
+          </div>
+
+          <div class="code-block" data-tab-content="anthropic">
+            <div class="code-head"><span class="lang">cURL</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="f">curl</span> https://api.scarlex.ru/v1/messages \
+  -H <span class="s">"x-api-key: YOUR_API_KEY"</span> \
+  -H <span class="s">"anthropic-version: 2023-06-01"</span> \
+  -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{
+    "model": "claude-haiku-3.5",
+    "max_tokens": 64,
+    "messages": [{"role":"user","content":"Say hi in one word."}]
+  }'</span></pre>
+          </div>
+          <div class="code-block" data-tab-content="openai" style="display:none">
+            <div class="code-head"><span class="lang">cURL</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="f">curl</span> https://api.scarlex.ru/v1/chat/completions \
+  -H <span class="s">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -H <span class="s">"content-type: application/json"</span> \
+  -d <span class="s">'{
+    "model": "claude-haiku-3.5",
+    "messages": [{"role":"user","content":"Say hi in one word."}]
+  }'</span></pre>
+          </div>
+
+          <p style="margin-top:24px">Соответствующий SDK-гайд в сайдбаре слева показывает зеркальный запрос для выбранного формата.</p>
+
+          <h3>Какой гайд подходит под мой кейс?</h3>
+          <div class="usecase">
+            <div class="row"><div class="case">Чат-приложение на Claude</div><div class="tools"><span class="pill">Anthropic SDK</span></div></div>
+            <div class="row"><div class="case">Чат-приложение на GPT</div><div class="tools"><span class="pill">OpenAI SDK</span></div></div>
+            <div class="row"><div class="case">Терминальный кодинг-ассистент (Claude)</div><div class="tools"><span class="pill">Claude Code</span></div></div>
+            <div class="row"><div class="case">Терминальный ассистент + кастомные модели</div><div class="tools"><span class="pill">OpenCode</span></div></div>
+            <div class="row"><div class="case">VS Code / JetBrains</div><div class="tools"><span class="pill">Cursor</span><span class="pill">Continue</span></div></div>
+            <div class="row"><div class="case">Next.js-приложение</div><div class="tools"><span class="pill">Vercel AI SDK</span></div></div>
+            <div class="row"><div class="case">Python RAG / агенты</div><div class="tools"><span class="pill">LangChain</span><span class="pill">LlamaIndex</span></div></div>
+            <div class="row"><div class="case">Простой CLI-редактор</div><div class="tools"><span class="pill">Aider</span></div></div>
+          </div>
+        </article>
+
+        <!-- cURL -->
+        <article class="doc-section" id="curl">
+          <h2>cURL</h2>
+          <p>Прямой запрос к API. Совместим с форматом OpenAI Chat Completions и Anthropic Messages.</p>
+
+          <h3>OpenAI-формат</h3>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">cURL · /v1/chat/completions</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="f">curl</span> https://api.scarlex.ru/v1/chat/completions \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -H <span class="s">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -d <span class="s">'{
+    "model": "claude-opus-4.7",
+    "messages": [
+      {"role": "user", "content": "Привет!"}
+    ]
+  }'</span></pre>
+          </div>
+
+          <h3>Anthropic-формат</h3>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">cURL · /v1/messages</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="f">curl</span> https://api.scarlex.ru/v1/messages \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -H <span class="s">"x-api-key: YOUR_API_KEY"</span> \
+  -H <span class="s">"anthropic-version: 2023-06-01"</span> \
+  -d <span class="s">'{
+    "model": "claude-opus-4.7",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "Привет!"}
+    ]
+  }'</span></pre>
+          </div>
+
+          <h3>OpenAI Responses API</h3>
+          <p>Stateless: <span class="mono">previous_response_id</span> не поддерживается, передавайте всю историю в <span class="mono">input</span>.</p>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">cURL · /v1/responses</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="f">curl</span> https://api.scarlex.ru/v1/responses \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -H <span class="s">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -d <span class="s">'{
+    "model": "claude-opus-4.7",
+    "instructions": "Ты лаконичный ассистент.",
+    "input": "Объясни замыкания одним предложением."
+  }'</span></pre>
+          </div>
+          <p>Полный гайд по Responses API — в <a href="https://scarlex.ru/dashboard/docs.html#responses-api">личном кабинете</a>.</p>
+
+          <h3>Streaming</h3>
+          <p>Добавьте <span class="mono">"stream": true</span> — ответ придёт в формате Server-Sent Events.</p>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">cURL · SSE</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="f">curl</span> https://api.scarlex.ru/v1/chat/completions \
+  -H <span class="s">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"model":"claude-sonnet-4","stream":true,"messages":[{"role":"user","content":"Hi"}]}'</span></pre>
+          </div>
+        </article>
+
+        <!-- Claude Code -->
+        <article class="doc-section" id="claude-code">
+          <h2>Claude Code CLI</h2>
+          <p>Подключите Scarlex как провайдер Claude Code через файл настроек — переписывать ничего не нужно.</p>
+
+          <h3>Путь к файлу</h3>
+          <p>
+            <b style="color:var(--text);font-weight:500">Windows:</b> <span class="mono">%USERPROFILE%\.claude\settings.json</span><br>
+            <b style="color:var(--text);font-weight:500">macOS / Linux:</b> <span class="mono">~/.claude/settings.json</span>
+          </p>
+
+          <div class="code-block">
+            <div class="code-head"><span class="lang">JSON · settings.json</span><button class="copy">⎘ COPY</button></div>
+<pre>{
+  <span class="s">"env"</span>: {
+    <span class="s">"ANTHROPIC_BASE_URL"</span>: <span class="s">"https://api.scarlex.ru"</span>,
+    <span class="s">"ANTHROPIC_AUTH_TOKEN"</span>: <span class="s">"YOUR_API_KEY"</span>,
+    <span class="s">"ANTHROPIC_MODEL"</span>: <span class="s">"claude-opus-4.7"</span>,
+    <span class="s">"ANTHROPIC_SMALL_FAST_MODEL"</span>: <span class="s">"claude-haiku-3.5"</span>,
+    <span class="s">"DISABLE_NON_ESSENTIAL_MODEL_CALLS"</span>: <span class="s">"1"</span>,
+    <span class="s">"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"</span>: <span class="s">"1"</span>
+  }
+}</pre>
+          </div>
+          <p>После сохранения перезапустите Claude Code — все запросы пойдут через Scarlex. Биллинг идёт по лимиту вашего API-ключа.</p>
+        </article>
+
+        <!-- OpenCode -->
+        <article class="doc-section" id="opencode">
+          <h2>OpenCode</h2>
+          <p>Создайте <span class="mono">opencode.json</span> в корне проекта или в <span class="mono">~/.config/opencode/</span>:</p>
+
+          <div class="code-block">
+            <div class="code-head"><span class="lang">JSON · opencode.json</span><button class="copy">⎘ COPY</button></div>
+<pre>{
+  <span class="s">"$schema"</span>: <span class="s">"https://opencode.ai/config.json"</span>,
+  <span class="s">"model"</span>: <span class="s">"Scarlex/claude-opus-4.7"</span>,
+  <span class="s">"provider"</span>: {
+    <span class="s">"Scarlex"</span>: {
+      <span class="s">"npm"</span>: <span class="s">"@ai-sdk/openai-compatible"</span>,
+      <span class="s">"name"</span>: <span class="s">"Scarlex"</span>,
+      <span class="s">"options"</span>: {
+        <span class="s">"baseURL"</span>: <span class="s">"https://api.scarlex.ru"</span>,
+        <span class="s">"apiKey"</span>: <span class="s">"YOUR_API_KEY"</span>
+      },
+      <span class="s">"models"</span>: {
+        <span class="s">"claude-opus-4.7"</span>: {
+          <span class="s">"name"</span>: <span class="s">"Claude Opus 4.7"</span>,
+          <span class="s">"limit"</span>: { <span class="s">"context"</span>: 200000, <span class="s">"output"</span>: 64000 },
+          <span class="s">"variants"</span>: { <span class="s">"high"</span>: {}, <span class="s">"medium"</span>: {}, <span class="s">"low"</span>: {} }
+        },
+        <span class="s">"claude-sonnet-4"</span>: {
+          <span class="s">"name"</span>: <span class="s">"Claude Sonnet 4"</span>,
+          <span class="s">"limit"</span>: { <span class="s">"context"</span>: 200000, <span class="s">"output"</span>: 64000 }
+        },
+        <span class="s">"claude-sonnet-4-thinking"</span>: {
+          <span class="s">"name"</span>: <span class="s">"Claude Sonnet 4 Thinking"</span>,
+          <span class="s">"limit"</span>: { <span class="s">"context"</span>: 200000, <span class="s">"output"</span>: 64000 }
+        }
+      }
+    }
+  },
+  <span class="s">"plugin"</span>: [<span class="s">"oh-my-opencode@latest"</span>]
+}</pre>
+          </div>
+        </article>
+
+        <!-- oh-my-opencode -->
+        <article class="doc-section" id="oh-my-opencode">
+          <h2>oh-my-opencode</h2>
+          <p>Плагин для OpenCode с мульти-агентной системой. Каждый агент получает свою модель — Sisyphus разруливает делегирование.</p>
+
+          <h3>1 · Подключите плагин</h3>
+          <p>Добавьте в <span class="mono">opencode.json</span>:</p>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">JSON</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="s">"plugin"</span>: [<span class="s">"oh-my-opencode@latest"</span>]</pre>
+          </div>
+
+          <h3>2 · Назначьте модели агентам</h3>
+          <p>Создайте <span class="mono">oh-my-opencode.json</span>:</p>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">JSON · oh-my-opencode.json</span><button class="copy">⎘ COPY</button></div>
+<pre>{
+  <span class="s">"agents"</span>: {
+    <span class="s">"sisyphus"</span>:   { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-opus-4.7"</span> },
+    <span class="s">"oracle"</span>:     { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-opus-4.7"</span> },
+    <span class="s">"librarian"</span>:  { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-sonnet-4"</span> },
+    <span class="s">"explore"</span>:    { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-sonnet-4"</span> },
+    <span class="s">"prometheus"</span>: { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-opus-4.6"</span> },
+    <span class="s">"metis"</span>:      { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-haiku-3.5"</span> },
+    <span class="s">"momus"</span>:      { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-sonnet-4-thinking"</span> }
+  },
+  <span class="s">"categories"</span>: {
+    <span class="s">"ultrabrain"</span>: { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-opus-4.7"</span> },
+    <span class="s">"quick"</span>:      { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-haiku-3.5"</span> },
+    <span class="s">"deep"</span>:       { <span class="s">"model"</span>: <span class="s">"SCARLEX/claude-opus-4.6"</span> }
+  }
+}</pre>
+          </div>
+        </article>
+
+        <!-- SDK -->
+        <article class="doc-section" id="sdk">
+          <h2>Python и Node SDK</h2>
+          <p>Scarlex полностью совместим с официальным <span class="mono">openai</span> SDK — достаточно сменить <span class="mono">base_url</span>.</p>
+
+          <h3>Python</h3>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">Python</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="k">from</span> openai <span class="k">import</span> OpenAI
+
+client = <span class="f">OpenAI</span>(
+    api_key=<span class="s">"YOUR_API_KEY"</span>,
+    base_url=<span class="s">"https://api.scarlex.ru/v1"</span>,
+)
+
+resp = client.chat.completions.<span class="f">create</span>(
+    model=<span class="s">"claude-opus-4.7"</span>,
+    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"Привет!"</span>}],
+)
+<span class="f">print</span>(resp.choices[<span class="n">0</span>].message.content)</pre>
+          </div>
+
+          <h3>Node.js</h3>
+          <div class="code-block">
+            <div class="code-head"><span class="lang">TypeScript</span><button class="copy">⎘ COPY</button></div>
+<pre><span class="k">import</span> OpenAI <span class="k">from</span> <span class="s">"openai"</span>;
+
+<span class="k">const</span> client = <span class="k">new</span> <span class="f">OpenAI</span>({
+  apiKey: <span class="s">"YOUR_API_KEY"</span>,
+  baseURL: <span class="s">"https://api.scarlex.ru/v1"</span>,
+});
+
+<span class="k">const</span> resp = <span class="k">await</span> client.chat.completions.<span class="f">create</span>({
+  model: <span class="s">"claude-opus-4.7"</span>,
+  messages: [{ role: <span class="s">"user"</span>, content: <span class="s">"Привет!"</span> }],
+});
+
+<span class="f">console</span>.log(resp.choices[<span class="n">0</span>].message.content);</pre>
+          </div>
+
+          <h3>Anthropic SDK</h3>
+          <p>Установите <span class="mono">ANTHROPIC_BASE_URL=https://api.scarlex.ru</span> и используйте свой Scarlex-ключ как <span class="mono">ANTHROPIC_AUTH_TOKEN</span>.</p>
+        </article>
+
+        <!-- MODELS -->
+        <article class="doc-section" id="models">
+          <h2>Доступные модели</h2>
+          <p>Все модели доступны через единый API-ключ. Используйте ID в поле <span class="mono">"model"</span> запроса.</p>
+
+          <h3 style="display:flex;align-items:center;gap:10px"><img src="assets/clients/claude_white.png" alt="Claude" style="width:24px;height:24px;object-fit:contain"> Anthropic Claude</h3>
+          <div class="models-grid">
+            <div class="model"><div class="nm">Claude Opus 4.7</div><div class="id">claude-opus-4.7</div></div>
+            <div class="model"><div class="nm">Claude Opus 4.6</div><div class="id">claude-opus-4.6</div></div>
+            <div class="model"><div class="nm">Claude Sonnet 4.6</div><div class="id">claude-sonnet-4.6</div></div>
+            <div class="model"><div class="nm">Claude Sonnet 4</div><div class="id">claude-sonnet-4</div></div>
+            <div class="model"><div class="nm">Claude Sonnet 4 Thinking</div><div class="id">claude-sonnet-4-thinking</div></div>
+            <div class="model"><div class="nm">Claude Haiku 3.5</div><div class="id">claude-haiku-3.5</div></div>
+          </div>
+        </article>
+
+        <!-- SUPPORT -->
+        <div class="support">
+          <div>
+            <h3>Нужна помощь с интеграцией?</h3>
+            <p>Поможем подключиться, разберём ошибки и подскажем подходящий тариф.</p>
+          </div>
+          <a class="btn btn-primary" style="padding:14px 22px;font-size:15px" href="https://t.me/scarlex_support">Перейти → @scarlex_support</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-grid">
+    <div class="foot-brand">
+      <img src="assets/scarlex-logo.png" alt="Scarlex">
+      <p>AI API Provider. OpenAI-совместимый прокси к моделям Claude — для разработчиков, IDE и ботов.</p>
+    </div>
+    <div>
+      <h5>Продукт</h5>
+      <ul>
+        <li><a href="https://scarlex.ru/#pricing">Цены</a></li>
+        <li><a href="https://scarlex.ru/api-guide.html">Доступные модели</a></li>
+        <li><a href="https://scarlex.ru/api-guide.html">Документация</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Ресурсы</h5>
+      <ul>
+        <li><a href="https://scarlex.ru/#faq">Частые вопросы</a></li>
+        <li><a href="https://scarlex.ru/api-guide.html">API Guide</a></li>
+        <li><a href="https://t.me/scarlex_support">Сообщество</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Поддержка</h5>
+      <ul>
+        <li><a href="https://t.me/scarlex_support">@scarlex_support</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bot">
+    <span>© 2026 SCARLEX · ВСЕ ПРАВА ЗАЩИЩЕНЫ</span>
+    <span><a href="https://scarlex.ru/terms.html" style="color:var(--text-2)">Публичная оферта</a></span>
+  </div>
+</footer>
+
+<script>
+  // session check — заменяет "Войти" на имя пользователя, ведущее в дашборд
+  (function(){
+    fetch('https://scarlex.ru/api/check_session.php',{credentials:'include'})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if(!d||!d.ok||!d.user) return;
+        var b=document.getElementById('loginNavBtn');
+        var c=document.getElementById('ctaNavBtn');
+        if(b){
+          b.textContent='👤 '+(d.user.username||d.user.email||'Кабинет');
+          b.href='https://scarlex.ru/dashboard.html';
+        }
+        if(c){
+          c.textContent='Кабинет →';
+          c.href='https://scarlex.ru/dashboard.html';
+        }
+      })
+      .catch(function(){});
+  })();
+
+  // tabs for hello-world
+  (function(){
+    const tabs = document.getElementById('hwTabs');
+    if(!tabs) return;
+    const buttons = tabs.querySelectorAll('button');
+    const contents = document.querySelectorAll('[data-tab-content]');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        const target = btn.dataset.tab;
+        contents.forEach(c => {
+          c.style.display = c.dataset.tabContent === target ? '' : 'none';
+        });
+      });
+    });
+  })();
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pre = btn.closest('.code-block').querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ COPIED';
+        btn.classList.add('ok');
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.classList.remove('ok');
+        }, 1400);
+      });
+    });
+  });
+
+  // sidebar smooth scroll + active highlight
+  (function(){
+    const links = document.querySelectorAll('.sidebar a');
+    const sections = Array.from(links).map(a => document.querySelector(a.getAttribute('href')));
+
+    // click handler — smooth scroll with offset for sticky nav
+    links.forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if(!target) return;
+        const y = target.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        history.replaceState(null, '', a.getAttribute('href'));
+      });
+    });
+
+    function update(){
+      const y = window.scrollY + 200;
+      let active = sections[0];
+      sections.forEach(s => { if(s && s.offsetTop <= y) active = s; });
+      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + active.id));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  })();
+</script>
+</body>
+</html>

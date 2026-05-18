@@ -1,0 +1,120 @@
+# === Secrets ===
+secrets.php
+api/secrets.php
+website/api/secrets.php
+**/secrets.php
+**/.env
+**/.env.*
+!**/.env.example
+telegram-bot/config.py
+telegram-bot/.env
+
+# === Refresh tokens / Kiro accounts (sensitive: contains AWS credentials) ===
+accounts.json
+**/accounts.json
+**/refresh_token*.json
+**/auth_kv*.json
+vps-proxy/api_keys.json
+vps-proxy/request_logs.db
+vps-proxy/*.db
+vps-proxy/*.sqlite*
+
+# === KiroTool runtime state ===
+kiro-form/kiro-*/
+kiro-form/sessions/
+kiro-form/*.log
+kiro-form/_logs/
+kiro-form/_status/
+kiro-form/_keys/
+
+# === scripts/ — full of one-off utilities with hardcoded VPS+FTP creds.
+# Re-add specific scripts here AFTER they're sanitized to load creds from env.
+scripts/
+
+# === Docs with hardcoded passwords (TODO: sanitize and re-track)
+AGENTS.md
+vps-proxy/AGENTS.md
+vps-proxy/DEPLOY.md
+vps-proxy/README.md
+vps-proxy/TODO_BOT.txt
+telegram-bot/DEPLOY.md
+
+# === One-off diagnostic scripts in vps-proxy/ with hardcoded SSH creds
+vps-proxy/check_*.py
+vps-proxy/debug_*.py
+vps-proxy/inspect_*.py
+vps-proxy/_test_*.py
+vps-proxy/deploy_vps.py
+vps-proxy/fix_vps.py
+vps-proxy/redeploy.py
+vps-proxy/setup_domain.py
+vps-proxy/test_admin.py
+vps-proxy/upload_scarlex.py
+kiro-form/add_account.py
+kiro-form/assign_proxies.py
+vps-proxy/assign_proxies.py
+
+# === Docs with hardcoded FTP/SSH creds (TODO: sanitize)
+website/DEPLOY.md
+website/README.md
+
+# === Personal local-user configs with API keys
+**/opencode.json
+**/opencode.local.json
+
+# === Claude Code local-user state (per-machine permissions, locks)
+**/.claude/
+.claude/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+
+# === Node ===
+node_modules/
+npm-debug.log*
+.npm
+
+# === IDE / OS ===
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs / runtime ===
+*.log
+logs/
+tmp/
+*.pid
+*.bak
+*.tmp
+*~
+
+# === FTP / deploy artefacts ===
+_ftp_*.py
+deploy_*.log
+
+# === Cookies / session dumps ===
+cookies.txt
+**/cookies.txt
+**/sessions/
+
+# === Build outputs ===
+dist/
+build/
+*.exe
+
+# === Telegram bot runtime ===
+telegram-bot/bot_state*.json
+telegram-bot/*.session
+telegram-bot/*.session-journal

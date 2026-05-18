@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 — Scarlex</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#000;
+    --text:#e0e0e0;
+    --text-2:#999;
+    --text-3:#666;
+    --border:#1a1a1a;
+    --accent:#fff;
+    --display:'Onest',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--display);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;position:relative;
+  }
+  
+  /* animated grid background */
+  .grid-bg{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size:180px 180px;
+    opacity:0.4;
+    animation:grid-shift 10s linear infinite;
+  }
+  @keyframes grid-shift{
+    0%{background-position:0 0}
+    100%{background-position:180px 180px}
+  }
+  
+  .glow{
+    position:absolute;width:800px;height:800px;
+    background:radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%);
+    pointer-events:none;
+    top:50%;left:50%;transform:translate(-50%,-50%);
+    animation:pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:0.3;transform:translate(-50%,-50%) scale(1)}
+    50%{opacity:0.6;transform:translate(-50%,-50%) scale(1.1)}
+  }
+  
+  .container{
+    position:relative;z-index:1;text-align:center;max-width:600px;padding:40px;
+  }
+  
+  .error-code{
+    font-size:clamp(120px, 20vw, 200px);
+    font-weight:800;
+    line-height:0.9;
+    background:linear-gradient(180deg, #fff 0%, #666 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    letter-spacing:-0.05em;
+    margin-bottom:24px;
+    position:relative;
+  }
+  
+  .glitch{
+    position:relative;
+    display:inline-block;
+  }
+  .glitch::before,
+  .glitch::after{
+    content:attr(data-text);
+    position:absolute;
+    top:0;left:0;width:100%;height:100%;
+    background:linear-gradient(180deg, #fff 0%, #666 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    pointer-events:none;
+  }
+  .glitch::before{
+    left:2px;
+    text-shadow:-2px 0 #ff00ff;
+    clip-path:inset(0 0 0 0);
+    animation:glitch-anim 3s infinite linear alternate-reverse;
+  }
+  .glitch::after{
+    left:-2px;
+    text-shadow:2px 0 #00ffff;
+    clip-path:inset(0 0 0 0);
+    animation:glitch-anim2 2s infinite linear alternate-reverse;
+  }
+  @keyframes glitch-anim{
+    0%   {clip-path:inset(40% 0 50% 0)}
+    10%  {clip-path:inset(10% 0 80% 0)}
+    20%  {clip-path:inset(70% 0 15% 0)}
+    30%  {clip-path:inset(30% 0 60% 0)}
+    40%  {clip-path:inset(55% 0 30% 0)}
+    50%  {clip-path:inset(5% 0 85% 0)}
+    60%  {clip-path:inset(80% 0 5% 0)}
+    70%  {clip-path:inset(20% 0 70% 0)}
+    80%  {clip-path:inset(65% 0 20% 0)}
+    90%  {clip-path:inset(35% 0 55% 0)}
+    100% {clip-path:inset(50% 0 40% 0)}
+  }
+  @keyframes glitch-anim2{
+    0%   {clip-path:inset(15% 0 70% 0)}
+    15%  {clip-path:inset(60% 0 25% 0)}
+    30%  {clip-path:inset(35% 0 50% 0)}
+    45%  {clip-path:inset(75% 0 10% 0)}
+    60%  {clip-path:inset(20% 0 65% 0)}
+    75%  {clip-path:inset(50% 0 35% 0)}
+    90%  {clip-path:inset(5% 0 80% 0)}
+    100% {clip-path:inset(45% 0 40% 0)}
+  }
+  
+  h1{
+    font-size:clamp(24px, 4vw, 36px);
+    font-weight:700;
+    margin-bottom:16px;
+    color:#fff;
+  }
+  
+  p{
+    font-size:clamp(15px, 2vw, 18px);
+    color:var(--text-2);
+    line-height:1.6;
+    margin-bottom:36px;
+  }
+  
+  .terminal{
+    background:#0a0a0a;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+    font-family:var(--mono);
+    font-size:13px;
+    text-align:left;
+    margin-bottom:36px;
+    color:var(--text-3);
+  }
+  .terminal .prompt{color:#666}
+  .terminal .error{color:#ff6b6b}
+  .terminal .path{color:#51cf66}
+  .terminal .cursor{
+    display:inline-block;
+    width:8px;
+    height:1em;
+    background:var(--text);
+    margin-left:4px;
+    vertical-align:-2px;
+    animation:blink 1s steps(2) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:14px 24px;
+    border-radius:12px;
+    font-size:15px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.2s;
+    border:1px solid var(--border);
+    background:#0e0e0e;
+    color:var(--text);
+  }
+  .btn:hover{
+    background:#fff;
+    color:#000;
+    border-color:#fff;
+    transform:translateY(-2px);
+  }
+  .btn .arrow{
+    transition:transform 0.2s;
+  }
+  .btn:hover .arrow{
+    transform:translateX(4px);
+  }
+  
+  .logo{
+    position:absolute;
+    top:32px;
+    left:32px;
+    z-index:10;
+  }
+  .logo img{
+    height:32px;
+    width:auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="glow"></div>
+
+<div class="container">
+  <div class="error-code">
+    <span class="glitch" data-text="404">404</span>
+  </div>
+  
+  <h1>Эндпоинт не найден</h1>
+  <p>Этот маршрут не существует в API. Возможно, вы искали <span style="font-family:var(--mono);color:var(--text)">/v1/messages</span> или <span style="font-family:var(--mono);color:var(--text)">/v1/chat/completions</span>?</p>
+  
+  <div class="terminal">
+    <div><span class="prompt">$</span> curl https://api.scarlex.ru<span class="path">/unknown-route</span></div>
+    <div><span class="error">ERROR 404:</span> Not Found</div>
+    <div><span class="prompt">$</span> <span class="cursor"></span></div>
+  </div>
+  
+  <a class="btn" href="https://scarlex.ru">
+    ← Вернуться на главную
+  </a>
+</div>
+
+</body>
+</html>

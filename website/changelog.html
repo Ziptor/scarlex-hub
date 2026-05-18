@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Changelog — Scarlex</title>
+<meta name="description" content="История релизов и изменений Scarlex API.">
+<link rel="icon" type="image/png" href="/logo_nofon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a; --bg-elev:#101010; --surface:#141414;
+    --border:#1f1f1f; --border-2:#2a2a2a;
+    --text:#f4f4f4; --text-2:#a8a8a8; --text-3:#6a6a6a; --text-4:#3f3f3f;
+    --accent: oklch(0.78 0.16 145);
+    --warn:   oklch(0.78 0.16 50);
+    --info:   oklch(0.78 0.16 240);
+    --maxw:880px;
+    --pad: clamp(20px, 4vw, 56px);
+    --display: 'Onest', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--display);font-feature-settings:"ss01","cv11";-webkit-font-smoothing:antialiased}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+
+  .grid-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse at 50% 20%, #000 30%, transparent 75%);
+  }
+
+  nav.top{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter: blur(14px);
+    background: rgba(10,10,10,.65);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1280px;margin:0 auto;padding: 14px var(--pad);
+    display:flex;align-items:center;gap:32px;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+  .logo img{height:36px;width:auto;display:block}
+  .nav-spacer{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:500;font-size:14px;transition:transform .12s ease, background .15s, border-color .15s}
+  .btn-ghost{border:1px solid var(--border-2);color:var(--text)}
+  .btn-ghost:hover{border-color:#3a3a3a;background:#161616}
+
+  main{position:relative;z-index:2;padding: clamp(48px,8vw,100px) 0 80px}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
+
+  .eyebrow{
+    display:flex;align-items:center;gap:12px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--text-3);margin-bottom:24px;
+  }
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--text-4)}
+
+  h1{
+    font-family:var(--display);font-weight:500;
+    font-size:clamp(40px, 6vw, 72px);letter-spacing:-.03em;line-height:1.02;
+    margin: 0 0 18px;
+  }
+  h1 em{font-style:normal;font-weight:700;background:linear-gradient(180deg,#fff 0%, #aaa 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  p.lede{font-size:18px;color:var(--text-2);line-height:1.5;max-width:55ch;margin:0 0 60px}
+
+  /* ───── Changelog list ───── */
+  .entries{display:flex;flex-direction:column;gap:0;border-left:1px dashed var(--border-2);margin-left:8px}
+  .entry{
+    position:relative;padding:32px 0 32px 36px;
+    border-bottom:1px dashed var(--border);
+  }
+  .entry:last-child{border-bottom:0}
+  .entry::before{
+    content:""; position:absolute; left:-7px; top:38px;
+    width:13px; height:13px; border-radius:50%;
+    background: var(--bg); border:2px solid var(--text-3);
+  }
+  .entry.feature::before{border-color:var(--accent); box-shadow:0 0 12px var(--accent)}
+  .entry.fix::before{border-color:var(--warn)}
+  .entry.security::before{border-color:#ff6f7f}
+
+  .entry-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+  .entry .date{
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--text-3);text-transform:uppercase;
+  }
+  .entry .tag{
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    padding:3px 8px;border-radius:5px;
+  }
+  .entry .tag.feature{color:var(--accent);background:rgba(124,255,182,.08);border:1px solid rgba(124,255,182,.2)}
+  .entry .tag.fix    {color:var(--warn);background:rgba(255,206,90,.08);border:1px solid rgba(255,206,90,.2)}
+  .entry .tag.security{color:#ff6f7f;background:rgba(255,111,127,.08);border:1px solid rgba(255,111,127,.2)}
+  .entry .tag.improvement{color:var(--info);background:rgba(120,170,255,.08);border:1px solid rgba(120,170,255,.2)}
+
+  .entry h3{
+    font-family:var(--display);font-weight:600;font-size:22px;letter-spacing:-.015em;
+    margin: 0 0 10px;color:var(--text);
+  }
+  .entry p{color:var(--text-2);font-size:15px;line-height:1.55;margin:0 0 12px;max-width:65ch}
+  .entry p:last-child{margin-bottom:0}
+  .entry ul{margin:8px 0 0;padding:0 0 0 18px;color:var(--text-2);font-size:14.5px;line-height:1.65}
+  .entry ul li{margin-bottom:4px}
+  .entry code{
+    font-family:var(--mono);font-size:12.5px;background:#171717;border:1px solid var(--border);
+    padding:1px 6px;border-radius:4px;color:var(--text);
+  }
+
+  /* ───── Footer ───── */
+  footer{
+    padding: 50px 0 30px;border-top:1px solid var(--border);
+    color:var(--text-3);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    text-align:center;
+  }
+  footer a{color:var(--text-3);transition:color .15s}
+  footer a:hover{color:var(--text-2)}
+
+  @media (max-width:640px){
+    .entry{padding-left:24px}
+    .entry::before{left:-7px}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<nav class="top">
+  <div class="nav-inner">
+    <a class="logo" href="/">
+      <img src="assets/scarlex-logo.png" alt="Scarlex">
+    </a>
+    <div class="nav-spacer"></div>
+    <a class="btn btn-ghost" href="/">На главную</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+    <div class="eyebrow"><span>RELEASES</span><span class="dot"></span><span>Public log</span></div>
+    <h1>Что нового в <em>Scarlex</em></h1>
+    <p class="lede">История релизов, фиксы и улучшения. Подписаться на обновления — в Telegram <a href="https://t.me/scarlex_bot" style="color:var(--text);border-bottom:1px solid var(--border-2)">@scarlex_bot</a>.</p>
+
+    <div class="entries">
+
+      <article class="entry feature">
+        <div class="entry-head">
+          <span class="date">17 мая 2026</span>
+          <span class="tag feature">Feature</span>
+        </div>
+        <h3>IP-whitelist для API-ключей</h3>
+        <p>Теперь к каждому ключу можно привязать список доверенных IP. Если ключ используется с другого адреса — придёт уведомление в Telegram. Soft-режим: не блокирует, только предупреждает (защита от утечки токена).</p>
+        <ul>
+          <li>Видишь топ-IP откуда юзался ключ — добавляешь в одно нажатие</li>
+          <li>Поддержка CIDR (<code>5.6.7.0/24</code>)</li>
+          <li>Дашборд → <a href="/dashboard/settings.html" style="color:var(--text);border-bottom:1px solid var(--border-2)">Настройки</a></li>
+        </ul>
+      </article>
+
+      <article class="entry improvement">
+        <div class="entry-head">
+          <span class="date">17 мая 2026</span>
+          <span class="tag improvement">Improvement</span>
+        </div>
+        <h3>Смена email из дашборда + настройка времени отчёта</h3>
+        <p>Email теперь меняется прямо в Настройках (с подтверждением пароля). Можно выбрать время ежедневного отчёта — по умолчанию 10:00 МСК.</p>
+      </article>
+
+      <article class="entry feature">
+        <div class="entry-head">
+          <span class="date">16 мая 2026</span>
+          <span class="tag feature">Feature</span>
+        </div>
+        <h3>Реферальная программа: гайд и FAQ</h3>
+        <p>На странице <a href="/dashboard/referrals.html" style="color:var(--text);border-bottom:1px solid var(--border-2)">Рефералы</a> теперь есть пошаговый гайд и ответы на частые вопросы. Программа: <strong style="color:var(--accent)">+50 ₽</strong> за подтверждённую регистрацию друга и <strong style="color:var(--accent)">5%</strong> пожизненно от его пополнений.</p>
+      </article>
+
+      <article class="entry security">
+        <div class="entry-head">
+          <span class="date">16 мая 2026</span>
+          <span class="tag security">Security</span>
+        </div>
+        <h3>reCAPTCHA v3 и брендированные email</h3>
+        <p>Регистрация защищена невидимой капчей. Письма с кодом подтверждения получили новый шаблон с логотипом и темным дизайном — больше не уходят в спам как «без темы».</p>
+      </article>
+
+      <article class="entry feature">
+        <div class="entry-head">
+          <span class="date">14 мая 2026</span>
+          <span class="tag feature">Feature</span>
+        </div>
+        <h3>Анти-фрод и логи использования ключей</h3>
+        <p>Теперь видна история запросов с каждого ключа — IP, модель, токены, статус. Удобно дебажить интеграции и отслеживать подозрительное использование.</p>
+      </article>
+
+      <article class="entry improvement">
+        <div class="entry-head">
+          <span class="date">10 мая 2026</span>
+          <span class="tag improvement">Improvement</span>
+        </div>
+        <h3>Новая страница входа и админка</h3>
+        <p>Перерисовали страницу авторизации в стиле главной. Добавили админ-панель для управления Kiro-пулом с топап токенов и аналитикой по ключам.</p>
+      </article>
+
+      <article class="entry fix">
+        <div class="entry-head">
+          <span class="date">5 мая 2026</span>
+          <span class="tag fix">Fix</span>
+        </div>
+        <h3>Импорт существующих ключей в дашборд</h3>
+        <p>Исправлен баг с привязкой ключа: при импорте ключа, созданного в kiro-админке, второй пользователь получал ошибку «ключ привязан к другому юзеру». Теперь ключ остаётся orphan'ом до явного claim.</p>
+      </article>
+
+      <article class="entry feature">
+        <div class="entry-head">
+          <span class="date">28 апреля 2026</span>
+          <span class="tag feature">Feature</span>
+        </div>
+        <h3>Telegram-бот <code>@scarlex_bot</code></h3>
+        <p>Запустили официального бота: вход на сайт через TG, пополнение баланса через CryptoBot, рефералки, история транзакций. Привязка делается deep-link'ом или 6-значным кодом из бота.</p>
+      </article>
+
+      <article class="entry feature">
+        <div class="entry-head">
+          <span class="date">15 апреля 2026</span>
+          <span class="tag feature">Feature</span>
+        </div>
+        <h3>OpenAI-совместимый эндпоинт <code>/v1/chat/completions</code></h3>
+        <p>Помимо нативного Anthropic <code>/v1/messages</code> добавили совместимость с OpenAI SDK — теперь Scarlex работает «из коробки» с любым клиентом, поддерживающим OpenAI API (Cline, Cursor, ChatBox, SillyTavern, Continue).</p>
+      </article>
+
+      <article class="entry feature">
+        <div class="entry-head">
+          <span class="date">1 апреля 2026</span>
+          <span class="tag feature">Feature</span>
+        </div>
+        <h3>Запуск Scarlex</h3>
+        <p>Первый публичный релиз: доступ к Claude (Opus 4.7, Sonnet 4.6, Haiku 4.5) через OpenAI-совместимое API. Оплата картами РФ, СБП, CryptoBot. До 50× дешевле прямого Anthropic API.</p>
+      </article>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    © 2026 Scarlex · <a href="/">Главная</a> · <a href="/status.html">Статус</a> · <a href="https://t.me/scarlex_bot">@scarlex_bot</a> · <a href="mailto:noreply@scarlex.ru">Контакт</a>
+  </div>
+</footer>
+
+</body>
+</html>

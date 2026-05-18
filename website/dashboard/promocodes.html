@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Промокоды — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">Баланс и тарифы</div><h1 class="d-page-title">Промокоды</h1>
+      <div class="d-page-sub">Активируй код на баланс или скидку.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section class="d-card" style="max-width:520px;margin-bottom:20px">
+    <h3>Активация</h3>
+    <div class="desc">Один промокод — один раз на аккаунт.</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <input class="d-input d-mono" id="prCode" placeholder="SCARLEX10" style="text-transform:uppercase">
+      <button class="d-btn primary" id="prGo">Активировать</button>
+    </div>
+    <div id="prOut" style="margin-top:14px;font-size:13px"></div>
+  </section>
+
+  <section class="d-card">
+    <h3>Как это работает</h3>
+    <div class="desc" style="margin-top:8px;line-height:1.7">
+      <p>• <b>Balance</b> — деньги начисляются на баланс мгновенно.</p>
+      <p>• <b>Percent</b> — скидка применяется в чекауте при покупке ключа на странице <a href="/dashboard/market.html" style="color:var(--d-white);text-decoration:underline">Маркет</a>.</p>
+    </div>
+  </section>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+SCX.boot('promocodes', function(){
+  document.getElementById('prGo').onclick = function(){
+    var code = document.getElementById('prCode').value.trim().toUpperCase();
+    var out = document.getElementById('prOut');
+    if (!code) return;
+    // Try validate first
+    SCX.api('/api/promocodes.php', {action:'validate', code:code}).then(function(r){
+      if (!r || !r.ok) { out.innerHTML = '<span class="d-pill err">'+SCX.escapeHtml(r && r.error || 'Не найден')+'</span>'; return; }
+      if (r.type === 'balance') {
+        if (!confirm('Активировать промокод и получить ' + r.value + ' ₽ на баланс?')) return;
+        SCX.api('/api/promocodes.php', {action:'activate_balance', code:code}).then(function(a){
+          if (a && a.ok) { out.innerHTML = '<span class="d-pill ok">+'+a.amount+' ₽ зачислено</span>'; setTimeout(function(){ location.reload(); }, 800); }
+          else out.innerHTML = '<span class="d-pill err">'+SCX.escapeHtml(a && a.error || 'Ошибка')+'</span>';
+        });
+      } else {
+        out.innerHTML = '<span class="d-pill ok">'+code+': скидка '+r.value+'%</span> — применяй при покупке в Маркете.';
+      }
+    });
+  };
+});
+</script>
+</body></html>

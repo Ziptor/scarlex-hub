@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Ключ — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.kd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kd-stat{padding:18px;border-radius:12px;background:var(--d-card-bg);border:1px solid var(--d-border)}
+.kd-stat .lbl{font-size:11px;color:var(--d-muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+.kd-stat .val{font-size:22px;font-weight:800;color:var(--d-white)}
+.kd-bar{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-top:8px}
+.kd-bar>span{display:block;height:100%;background:var(--d-white)}
+.kd-tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--d-border);padding-bottom:0}
+.kd-tab{padding:10px 14px;cursor:pointer;color:var(--d-muted);font-size:13px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px}
+.kd-tab.is-active{color:var(--d-white);border-bottom-color:var(--d-white)}
+.kd-period{display:flex;gap:6px;margin-left:auto}
+.kd-period button{padding:6px 12px;border-radius:6px;background:transparent;border:1px solid var(--d-border);color:var(--d-muted);font-size:12px;cursor:pointer}
+.kd-period button.is-active{background:var(--d-white);color:var(--d-bg);border-color:var(--d-white)}
+.kd-chart-wrap{position:relative;height:260px}
+.kd-chart{width:100%;height:100%;display:block}
+.kd-tip{position:absolute;pointer-events:none;background:#0e0e10;border:1px solid var(--d-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--d-white);display:none;z-index:5;white-space:nowrap}
+.kd-tip b{color:#fff}
+.kd-empty{padding:60px 0;text-align:center;color:var(--d-muted);font-size:13px}
+.kd-tx{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--d-border);font-size:13px;gap:12px}
+.kd-tx:last-child{border-bottom:none}
+.kd-tx .left{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.kd-tx .ttl{color:var(--d-white);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kd-tx .meta{color:var(--d-muted);font-size:11px}
+.kd-tx .amount{font-weight:700;white-space:nowrap}
+.kd-tx .amount.pos{color:var(--d-success,#a8ff9c)}
+.kd-tx .amount.neg{color:var(--d-white)}
+.kd-models-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.kp-src-badge{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+.kp-src-badge.kiro{background:rgba(124,208,255,.14);color:#7cd0ff}
+.kp-src-badge.reseller{background:rgba(255,206,90,.14);color:#ffce5a}
+.kp-log-wrap{overflow-x:auto;border:1px solid var(--d-border);border-radius:10px}
+.kp-log-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.kp-log-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--d-muted);background:rgba(255,255,255,.02);border-bottom:1px solid var(--d-border);white-space:nowrap}
+.kp-log-table td{padding:8px 10px;color:var(--d-text);border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;vertical-align:middle}
+.kp-log-table td.num{font-variant-numeric:tabular-nums;color:var(--d-white);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px}
+.kp-log-table tr:hover td{background:rgba(255,255,255,.02)}
+.kp-status{display:inline-block;padding:2px 8px;border-radius:7px;font-size:10.5px;font-weight:700}
+.kp-status.ok{background:rgba(124,255,182,.12);color:#7cffb6}
+.kp-status.err{background:rgba(255,107,107,.12);color:#ff7f9f}
+.kp-pill{display:inline-block;padding:1px 6px;border-radius:6px;font-size:9.5px;font-weight:700;background:rgba(124,208,255,.12);color:#7cd0ff;margin-left:4px}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div>
+      <div class="d-page-eyebrow"><a href="/dashboard/keys.html" style="color:var(--d-muted);text-decoration:none">← Все ключи</a></div>
+      <h1 class="d-page-title" id="kdName">Загрузка…</h1>
+      <div class="d-page-sub" id="kdMasked">…</div>
+    </div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section class="kd-grid">
+    <div class="kd-stat"><div class="lbl">Лимит</div><div class="val" id="kdLimit">—</div></div>
+    <div class="kd-stat"><div class="lbl">Использовано</div><div class="val" id="kdUsed">—</div>
+      <div class="kd-bar"><span id="kdBar" style="width:0%"></span></div>
+      <div style="font-size:11px;color:var(--d-muted);margin-top:4px"><span id="kdPct">0</span>% от лимита</div>
+    </div>
+    <div class="kd-stat"><div class="lbl">Осталось</div><div class="val" id="kdLeft">—</div></div>
+    <div class="kd-stat"><div class="lbl">Запросов всего</div><div class="val" id="kdReq">—</div></div>
+  </section>
+
+  <section class="d-card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <h3 style="margin:0">Расход</h3>
+      <div class="kd-period" id="kdPeriod">
+        <button data-p="24h" class="is-active">24 часа</button>
+        <button data-p="7d">7 дней</button>
+        <button data-p="30d">30 дней</button>
+      </div>
+    </div>
+    <div class="kd-chart-wrap">
+      <canvas id="kdChart" class="kd-chart"></canvas>
+      <div id="kdTip" class="kd-tip"></div>
+      <div id="kdChartEmpty" class="kd-empty" style="display:none">Истории расхода ещё нет.<br>Сделай первый запрос — данные появятся.</div>
+    </div>
+  </section>
+
+  <section class="d-grid d-grid-2" style="gap:20px">
+    <div class="d-card">
+      <h3>Распределение по моделям</h3>
+      <div class="desc">За выбранный период.</div>
+      <div id="kdModels" style="margin-top:14px"><div class="d-empty">—</div></div>
+    </div>
+    <div class="d-card">
+      <h3>Журнал запросов</h3>
+      <div class="desc">Последние 50 операций по этому ключу.</div>
+      <div id="kdLog" style="margin-top:14px"><div class="d-empty">Загрузка…</div></div>
+    </div>
+  </section>
+</main>
+
+<script src="/dashboard.js?v=1786000000"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+var KEY_ID = +(new URLSearchParams(location.search).get('id') || 0);
+var PERIOD = '24h';
+var CHART_DATA = null;
+var KEY_SOURCE = null;       // 'scarlex_proxy' | 'reseller_sync' | 'imported' | …
+var KEY_PREVIEW = null;      // короткий preview для Kiro API
+var KP_TIME_CHART = null;    // chart.js instance for time chart (kiro)
+var KP_MODELS_CHART = null;  // chart.js instance for models doughnut
+
+function periodHours(p){ return p==='24h'?24 : p==='7d'?168 : 720; }
+function periodGroupBy(p){ return p==='24h'?'hour' : 'day'; }
+function isKiroKey(){ return KEY_SOURCE === 'scarlex_proxy'; }
+
+function loadKey(){
+  if (!KEY_ID) { document.getElementById('kdName').textContent = 'Не указан id'; return; }
+  SCX.api('/api/keys.php?action=list').then(function(d){
+    if (!d || !d.ok) return;
+    var k = (d.keys || []).filter(function(x){ return +x.id === KEY_ID; })[0];
+    if (!k) { document.getElementById('kdName').textContent = 'Ключ не найден'; return; }
+    KEY_SOURCE = k.source || null;
+    KEY_PREVIEW = k.masked || '';
+    document.getElementById('kdName').textContent = k.label || 'Без названия';
+    var srcLabel = isKiroKey() ? ' <span class="kp-src-badge kiro">Scarlex</span>' : '';
+    document.getElementById('kdMasked').innerHTML = '<code style="cursor:pointer" title="Скопировать" id="kdKey">'+SCX.escapeHtml(k.masked)+' 📋</code>' + srcLabel;
+    document.getElementById('kdKey').onclick = function(){ navigator.clipboard.writeText(k.key_value); SCX.toast('Скопировано'); };
+    document.getElementById('kdLimit').textContent = SCX.fmtTokens(k.tokens_limit);
+    document.getElementById('kdUsed').textContent = SCX.fmtTokens(k.used_tokens);
+    document.getElementById('kdLeft').textContent = SCX.fmtTokens(k.remaining || (k.tokens_limit - k.used_tokens));
+    var pct = k.usage_percent || 0;
+    document.getElementById('kdBar').style.width = Math.min(100, pct) + '%';
+    document.getElementById('kdPct').textContent = pct.toFixed(1);
+
+    if (isKiroKey()) {
+      // Прячем легаси-блок «Распределение по моделям» (заменим на kiro doughnut)
+      kiroLoadAll();
+    } else {
+      loadStats();
+      loadHistory();
+      loadLog();
+    }
+  });
+}
+
+// ──────────── Kiro (наши) ключи ────────────
+function kiroLoadAll(){
+  kiroLoadSummary();
+  kiroLoadTimeseries();
+  kiroLoadModels();
+  kiroLoadLogs();
+}
+
+function kiroLoadSummary(){
+  SCX.api('/api/key_stats.php?action=summary&key_id=' + KEY_ID).then(function(d){
+    if (!d || !d.ok) return;
+    document.getElementById('kdReq').textContent = (d.requests||0).toLocaleString('ru-RU');
+  });
+}
+
+function kiroLoadTimeseries(){
+  var hours = periodHours(PERIOD);
+  SCX.api('/api/key_stats.php?action=timeseries&key_id=' + KEY_ID + '&hours=' + hours).then(function(d){
+    var canvas = document.getElementById('kdChart');
+    var empty = document.getElementById('kdChartEmpty');
+    if (!d || !d.ok || !d.labels || !d.labels.length) {
+      canvas.style.display = 'none'; empty.style.display = 'block'; return;
+    }
+    var totalReq = (d.requests||[]).reduce(function(a,b){ return a+b; }, 0);
+    if (!totalReq) { canvas.style.display = 'none'; empty.style.display = 'block'; return; }
+    canvas.style.display = 'block'; empty.style.display = 'none';
+
+    var labels = d.labels.map(function(ts){
+      var dt = new Date(ts*1000);
+      if (hours <= 24) return dt.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
+      return dt.toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit'});
+    });
+    if (KP_TIME_CHART) { try { KP_TIME_CHART.destroy(); } catch(e){} }
+    KP_TIME_CHART = new Chart(canvas, {
+      type:'line',
+      data:{labels:labels,datasets:[
+        {label:'Запросы',data:d.requests,borderColor:'#7cd0ff',backgroundColor:'rgba(124,208,255,.12)',fill:true,tension:.3,yAxisID:'y'},
+        {label:'Токены',data:d.tokens,borderColor:'#ffb84d',backgroundColor:'rgba(255,184,77,.05)',fill:false,tension:.3,yAxisID:'y1'}
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#aaa',font:{size:11}}}},
+        scales:{
+          x:{ticks:{color:'#888',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{color:'rgba(255,255,255,.04)'}},
+          y:{position:'left',ticks:{color:'#888',font:{size:10},precision:0},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'Запросы',color:'#888',font:{size:10}}},
+          y1:{position:'right',ticks:{color:'#888',font:{size:10}},grid:{display:false},title:{display:true,text:'Токены',color:'#888',font:{size:10}}}
+        }
+      }
+    });
+  });
+}
+
+function kiroLoadModels(){
+  var hours = periodHours(PERIOD);
+  SCX.api('/api/key_stats.php?action=stats&key_id=' + KEY_ID + '&hours=' + hours).then(function(d){
+    var box = document.getElementById('kdModels');
+    if (!d || !d.ok || !d.by_model || !d.by_model.length) {
+      box.innerHTML = '<div class="d-empty">Запросов в этом периоде нет</div>';
+      return;
+    }
+    box.innerHTML = '<div style="position:relative;height:240px"><canvas id="kdModelsChart"></canvas></div>'
+      + '<div id="kdModelsList" style="margin-top:14px"></div>';
+    var arr = d.by_model.slice().sort(function(a,b){ return (b.total_tokens||0)-(a.total_tokens||0); });
+    var labels = arr.map(function(m){ return m.model || '—'; });
+    var data = arr.map(function(m){ return m.total_tokens || 0; });
+    var pal = ['#7cd0ff','#7cffb6','#ffb84d','#ff7f9f','#c79bff','#5ad3ff','#ffe17a','#94f0c2'];
+    if (KP_MODELS_CHART) { try { KP_MODELS_CHART.destroy(); } catch(e){} }
+    KP_MODELS_CHART = new Chart(document.getElementById('kdModelsChart'), {
+      type:'doughnut',
+      data:{labels:labels,datasets:[{data:data,backgroundColor:pal,borderColor:'#0a0a0c',borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+        plugins:{legend:{position:'bottom',labels:{color:'#aaa',font:{size:10},padding:8,boxWidth:10}}}
+      }
+    });
+    var totalTok = data.reduce(function(s,v){ return s+v; }, 0) || 1;
+    document.getElementById('kdModelsList').innerHTML = arr.slice(0,8).map(function(m){
+      var pct = (m.total_tokens/totalTok*100).toFixed(1);
+      return '<div class="kd-models-row"><span style="color:var(--d-white)">'+SCX.escapeHtml(m.model||'—')+'</span>'
+        + '<span style="color:var(--d-muted)">'+SCX.fmtTokens(m.total_tokens)+' · '+m.requests+' зап. · '+pct+'%</span></div>';
+    }).join('');
+  });
+}
+
+function kiroLoadLogs(){
+  SCX.api('/api/key_stats.php?action=logs&key_id=' + KEY_ID + '&limit=50').then(function(d){
+    var box = document.getElementById('kdLog');
+    if (!d || !d.ok || !d.logs || !d.logs.length) {
+      box.innerHTML = '<div class="d-empty">Запросов пока нет</div>'; return;
+    }
+    var rows = d.logs.map(function(l){
+      var ok = (l.status === 'ok' || l.status === 200);
+      var statusBadge = '<span class="kp-status '+(ok?'ok':'err')+'">'+SCX.escapeHtml(String(l.status||'?'))+'</span>';
+      var when = l.ts ? new Date(l.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—';
+      var tokStr = SCX.fmtTokens(l.prompt_tokens||0)+' / '+SCX.fmtTokens(l.completion_tokens||0);
+      var lat = l.duration_ms ? l.duration_ms+' мс' : '—';
+      return '<tr>'
+        + '<td class="num">'+SCX.escapeHtml(when)+'</td>'
+        + '<td>'+SCX.escapeHtml(l.model||'—')+(l.stream?' <span class="kp-pill">stream</span>':'')+'</td>'
+        + '<td class="num">'+tokStr+'</td>'
+        + '<td class="num">'+lat+'</td>'
+        + '<td>'+statusBadge+'</td>'
+        + '</tr>';
+    }).join('');
+    box.innerHTML = '<div class="kp-log-wrap"><table class="kp-log-table"><thead><tr>'
+      + '<th>Время</th><th>Модель</th><th>Tokens P/C</th><th>Latency</th><th>Статус</th>'
+      + '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  });
+}
+
+// ──────────── Reseller (старые) ключи ────────────
+function loadStats(){
+  SCX.api('/api/transactions.php?action=list&page=1&key_id=' + KEY_ID + '&limit=500').then(function(d){
+    if (!d || !d.ok) return;
+    var rows = d.transactions || [];
+    var chats = rows.filter(function(t){ return t.tx_type === 'chat'; });
+    document.getElementById('kdReq').textContent = chats.length.toLocaleString('ru-RU');
+
+    // Models breakdown
+    var byModel = {};
+    chats.forEach(function(t){
+      var m = t.model || '—';
+      if (!byModel[m]) byModel[m] = {cnt:0, tokens:0};
+      byModel[m].cnt++;
+      byModel[m].tokens += +t.total_tokens || 0;
+    });
+    var arr = Object.keys(byModel).map(function(k){ return {model:k, cnt:byModel[k].cnt, tokens:byModel[k].tokens}; });
+    arr.sort(function(a,b){ return b.tokens - a.tokens; });
+    var box = document.getElementById('kdModels');
+    if (!arr.length) { box.innerHTML = '<div class="d-empty">Запросов пока нет</div>'; return; }
+    var totalTok = arr.reduce(function(s,m){ return s + m.tokens; }, 0) || 1;
+    box.innerHTML = arr.slice(0,8).map(function(m){
+      var pct = (m.tokens/totalTok*100).toFixed(1);
+      return '<div style="margin-bottom:10px">'
+        + '<div class="kd-models-row"><span style="color:var(--d-white)">'+SCX.escapeHtml(m.model)+'</span>'
+        + '<span style="color:var(--d-muted)">'+SCX.fmtTokens(m.tokens)+' · '+m.cnt+' зап. · '+pct+'%</span></div>'
+        + '<div class="kd-bar" style="height:4px"><span style="width:'+pct+'%"></span></div></div>';
+    }).join('');
+  });
+}
+
+function loadLog(){
+  SCX.api('/api/transactions.php?action=list&page=1&key_id=' + KEY_ID + '&limit=50').then(function(d){
+    var box = document.getElementById('kdLog');
+    if (!d || !d.ok || !d.transactions || !d.transactions.length) { box.innerHTML = '<div class="d-empty">Операций пока нет</div>'; return; }
+    box.innerHTML = d.transactions.map(function(t){
+      var ttl, meta, amt, cls = 'neg';
+      if (t.tx_type === 'chat') {
+        ttl = t.model || 'chat';
+        meta = (t.status || 'ok') + ' · ' + (t.prompt_tokens||0) + ' + ' + (t.completion_tokens||0) + ' tok';
+        amt = SCX.fmtTokens(t.total_tokens||0) + ' tok';
+      } else {
+        ttl = t.description || t.type || '—';
+        meta = t.type || '';
+        amt = (Number(t.amount)>0?'+':'') + Number(t.amount).toFixed(2) + ' ₽';
+        if (Number(t.amount) > 0) cls = 'pos';
+      }
+      return '<div class="kd-tx"><div class="left"><div class="ttl">'+SCX.escapeHtml(ttl)+'</div>'
+        + '<div class="meta">'+SCX.fmtDate(t.created_at)+' · '+SCX.escapeHtml(meta)+'</div></div>'
+        + '<div class="amount '+cls+'">'+amt+'</div></div>';
+    }).join('');
+  });
+}
+
+function loadHistory(){
+  SCX.api('/api/usage_history.php?key_id=' + KEY_ID + '&period=' + PERIOD).then(function(d){
+    if (!d || !d.ok) { CHART_DATA = []; renderChart(); return; }
+    CHART_DATA = (d.history || []).map(function(h){
+      return {t: new Date(h.recorded_at).getTime(), used: +h.used_tokens||0, max: +h.max_tokens||0};
+    });
+    renderChart();
+  });
+}
+
+function renderChart(){
+  var canvas = document.getElementById('kdChart');
+  var empty = document.getElementById('kdChartEmpty');
+  var data = CHART_DATA || [];
+  if (data.length < 2) { canvas.style.display = 'none'; empty.style.display = 'block'; return; }
+  canvas.style.display = 'block'; empty.style.display = 'none';
+
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  var W = rect.width, H = rect.height;
+  var padL = 50, padR = 12, padT = 14, padB = 26;
+  ctx.clearRect(0,0,W,H);
+
+  var t0 = data[0].t, t1 = data[data.length-1].t;
+  var maxUsed = data.reduce(function(m,p){ return Math.max(m, p.used); }, 0);
+  var limit = data[data.length-1].max || maxUsed;
+  var yMax = Math.max(maxUsed, limit) * 1.05 || 1;
+
+  var x = function(t){ return padL + (t-t0)/(t1-t0) * (W-padL-padR); };
+  var y = function(v){ return padT + (1 - v/yMax) * (H-padT-padB); };
+
+  // grid + Y labels
+  ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+  ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = '11px Inter,system-ui';
+  for (var i=0; i<=4; i++){
+    var v = yMax*i/4, py = y(v);
+    ctx.beginPath(); ctx.moveTo(padL, py); ctx.lineTo(W-padR, py); ctx.stroke();
+    ctx.fillText(SCX.fmtTokens(Math.round(v)), 4, py+4);
+  }
+
+  // X labels (start, mid, end)
+  ctx.textAlign = 'center';
+  var fmtX = function(ms){
+    var d = new Date(ms);
+    if (PERIOD === '24h') return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    return (d.getDate()+'').padStart(2,'0')+'.'+((d.getMonth()+1)+'').padStart(2,'0');
+  };
+  [t0, (t0+t1)/2, t1].forEach(function(t, i){
+    var px = x(t);
+    ctx.fillText(fmtX(t), px, H-8);
+  });
+  ctx.textAlign = 'start';
+
+  // Limit line
+  if (limit > 0) {
+    ctx.strokeStyle = 'rgba(255,206,90,.5)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(padL, y(limit)); ctx.lineTo(W-padR, y(limit)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,206,90,.7)'; ctx.font = '10px Inter';
+    ctx.fillText('Лимит ' + SCX.fmtTokens(limit), W-padR-90, y(limit)-4);
+  }
+
+  // Area fill under "used"
+  var grad = ctx.createLinearGradient(0, padT, 0, H-padB);
+  grad.addColorStop(0, 'rgba(255,255,255,.18)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(x(data[0].t), y(0));
+  data.forEach(function(p){ ctx.lineTo(x(p.t), y(p.used)); });
+  ctx.lineTo(x(data[data.length-1].t), y(0));
+  ctx.closePath(); ctx.fill();
+
+  // Line
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  data.forEach(function(p, i){ if (i===0) ctx.moveTo(x(p.t), y(p.used)); else ctx.lineTo(x(p.t), y(p.used)); });
+  ctx.stroke();
+
+  // Hover tooltip
+  var tip = document.getElementById('kdTip');
+  canvas.onmousemove = function(e){
+    var r = canvas.getBoundingClientRect();
+    var mx = e.clientX - r.left;
+    if (mx < padL || mx > W-padR) { tip.style.display = 'none'; return; }
+    // find nearest point
+    var tHover = t0 + (mx-padL)/(W-padL-padR) * (t1-t0);
+    var nearest = data[0], minDt = Math.abs(data[0].t - tHover);
+    data.forEach(function(p){ var dt = Math.abs(p.t - tHover); if (dt < minDt) { minDt = dt; nearest = p; } });
+    var d = new Date(nearest.t);
+    tip.innerHTML = '<b>'+SCX.fmtTokens(nearest.used)+'</b> tok<br>'
+      + '<span style="color:#888">'+d.toLocaleString('ru-RU')+'</span>';
+    tip.style.display = 'block';
+    var px = x(nearest.t), py = y(nearest.used);
+    tip.style.left = Math.min(W - 140, Math.max(0, px + 10)) + 'px';
+    tip.style.top  = Math.max(0, py - 40) + 'px';
+  };
+  canvas.onmouseleave = function(){ tip.style.display = 'none'; };
+}
+
+document.getElementById('kdPeriod').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-p]'); if (!b) return;
+  PERIOD = b.dataset.p;
+  document.querySelectorAll('#kdPeriod button').forEach(function(x){ x.classList.toggle('is-active', x===b); });
+  if (isKiroKey()) { kiroLoadTimeseries(); kiroLoadModels(); }
+  else loadHistory();
+});
+
+window.addEventListener('resize', function(){ if (!isKiroKey() && CHART_DATA) renderChart(); });
+
+SCX.boot('keys', loadKey);
+</script>
+</body></html>

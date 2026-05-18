@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Kiro Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;color:#ccc;font:13px/1.5 'Consolas','Monaco',monospace;padding:12px}
+h2{color:#fff;font-size:15px;margin:16px 0 8px;border-bottom:1px solid #333;padding-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+th{text-align:left;padding:4px 8px;background:#1a1a1a;color:#888;font-size:11px;text-transform:uppercase;border-bottom:1px solid #333}
+td{padding:4px 8px;border-bottom:1px solid #1a1a1a;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+tr:hover td{background:#1a1a1a}
+.ok{color:#4f4} .err{color:#f66} .warn{color:#fc0} .muted{color:#666}
+button,input,select{font:inherit;background:#222;color:#ccc;border:1px solid #444;padding:4px 10px;border-radius:4px;cursor:pointer}
+button:hover{background:#333} input{min-width:100px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:12px;margin-bottom:12px}
+.stat{display:inline-block;min-width:110px;margin:4px 16px 4px 0}
+.stat b{display:block;font-size:18px;color:#fff}
+.stat small{color:#888;font-size:11px}
+#login{position:fixed;inset:0;background:#111;z-index:999;display:flex;align-items:center;justify-content:center}
+#login .box{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:24px;width:320px;text-align:center}
+#login h1{color:#fff;font-size:16px;margin-bottom:12px}
+#login input{width:100%;margin-bottom:8px;padding:8px}
+#login button{width:100%;padding:8px;background:#333}
+.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:bold}
+.badge.on{background:#143;color:#4f4} .badge.off{background:#311;color:#f66}
+.bar{height:6px;border-radius:3px;background:#222;margin-top:2px;position:relative;width:80px;display:inline-block}
+.bar .fill{height:100%;border-radius:3px;position:absolute;left:0;top:0}
+#logBox{max-height:400px;overflow-y:auto}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:none;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-body{background:#1a1a1a;border:1px solid #444;border-radius:8px;padding:16px;width:90%;max-width:900px;max-height:80vh;overflow-y:auto}
+.clickable{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
+.prompt-cell{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help}
+</style></head><body>
+
+<div id="login">
+<div class="box">
+<h1>Kiro Admin Panel</h1>
+<input id="keyInput" type="password" placeholder="Admin Key (adm-...)" autofocus onkeydown="if(event.key==='Enter')doLogin()">
+<button onclick="doLogin()">Login</button>
+<div id="loginErr" style="color:#f66;margin-top:8px;font-size:12px"></div>
+</div>
+</div>
+
+<!-- Key Detail Modal -->
+<div class="modal" id="keyModal">
+<div class="modal-body">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<h2 style="margin:0;border:0" id="modalTitle">Key Details</h2>
+<button onclick="closeModal()" style="background:#311;color:#f66">Close</button>
+</div>
+<div id="modalKeyInfo"></div>
+<h2 style="font-size:13px">Request History</h2>
+<div id="modalKeyLogs">Loading...</div>
+</div>
+</div>
+
+<div id="app" style="display:none">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<span style="color:#fff;font-size:15px;font-weight:bold">Kiro Admin</span>
+<div><button onclick="refreshAll()" style="background:#234">Refresh</button> <button onclick="logout()" style="background:#311;color:#f66">Logout</button></div>
+</div>
+<div class="card" id="statusCard">Loading...</div>
+<div class="card" id="billingCard" style="display:none"></div>
+
+<h2>API Keys</h2>
+<div class="row">
+<input id="nk" placeholder="sk-scarlex-..." style="flex:1">
+<input id="nn" placeholder="Name" style="width:120px">
+<input id="nr" type="number" value="45" style="width:55px" title="RPM">
+<input id="nc" type="number" value="0" style="width:80px" placeholder="Credits" title="Credits (0=unlimited)">
+<button onclick="genKey()">Gen</button>
+<button onclick="addKey()" style="background:#143;color:#4f4">+ Add</button>
+</div>
+<div style="color:#666;font-size:11px;margin-bottom:8px">Credits = token limit (0 = unlimited). Click key name to view details & logs.</div>
+<div id="keysTable"></div>
+
+<h2>Kiro Accounts <span id="accSummary" class="muted"></span></h2>
+<div id="accountsTable"></div>
+
+<h2>Request Log <button onclick="loadLogs()" style="font-size:11px">refresh</button> <span id="logCount" class="muted"></span></h2>
+<div id="logBox"></div>
+
+<h2>Test Chat</h2>
+<div class="row">
+<input id="testKey" placeholder="API key" style="flex:1">
+<input id="testMsg" placeholder="Message" value="say hi in 5 words" style="flex:1">
+<select id="testModel"><option>claude-sonnet-4</option><option>claude-opus-4.7</option></select>
+<button onclick="testChat()" style="background:#234">Send</button>
+</div>
+<pre id="testResult" style="background:#1a1a1a;padding:8px;border-radius:4px;max-height:200px;overflow:auto;font-size:12px;white-space:pre-wrap;margin-top:6px"></pre>
+</div>
+
+<script>
+var K='';
+function api(m,p,b){var o={method:m,headers:{'Authorization':'Bearer '+K,'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);return fetch(p,o).then(r=>r.json());}
+function doLogin(){K=document.getElementById('keyInput').value.trim();if(!K){document.getElementById('loginErr').textContent='Enter key';return;}api('GET','/admin/keys').then(d=>{if(d.detail){document.getElementById('loginErr').textContent=d.detail;return;}localStorage.setItem('kiro_admin_key',K);document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';refreshAll();}).catch(()=>{document.getElementById('loginErr').textContent='Connection error';});}
+function logout(){localStorage.removeItem('kiro_admin_key');location.reload();}
+var saved=localStorage.getItem('kiro_admin_key');if(saved){K=saved;document.getElementById('keyInput').value=K;doLogin();}
+function refreshAll(){loadStatus();loadKeys();loadAccounts();loadLogs();}
+
+function loadStatus(){api('GET','/status').then(d=>{if(d.detail)return;document.getElementById('statusCard').innerHTML='<div class="stat"><b class="ok">Online</b><small>Status</small></div><div class="stat"><b>'+d.pool.alive+'/'+d.pool.total+'</b><small>Accounts</small></div><div class="stat"><b>'+d.uptime+'</b><small>Uptime</small></div><div class="stat"><b>'+fmt(d.stats.total_requests)+'</b><small>Requests</small></div><div class="stat"><b>'+fmtT(d.stats.total_tokens)+'</b><small>Tokens</small></div><div class="stat"><b>'+d.pool.available+'</b><small>Available</small></div>'+(d.credits?'<div class="stat"><b>'+d.credits.pct+'%</b><small>Kiro credits</small></div>':'');}).catch(()=>{document.getElementById('statusCard').innerHTML='<span class="err">Offline</span>';});}
+
+function loadKeys(){api('GET','/admin/keys').then(d=>{if(!d.keys)return;
+var tL=0,tU=0,tR=0,ul=0;d.keys.forEach(k=>{if(k.credits_limit>0){tL+=k.credits_limit;tU+=k.credits_used;}else ul++;tR+=(k.stats?k.stats.requests:0);});
+var bc=document.getElementById('billingCard');bc.style.display='block';
+bc.innerHTML='<div style="color:#fff;font-size:13px;font-weight:bold;margin-bottom:8px">Billing Summary</div><div class="stat"><b>'+d.keys.length+'</b><small>Keys</small></div><div class="stat"><b>'+ul+'</b><small>Unlimited</small></div><div class="stat"><b>'+fmtT(tL)+'</b><small>Allocated</small></div><div class="stat"><b style="color:'+(tL>0&&tU/tL>.8?'#f66':tU/tL>.5?'#fc0':'#4f4')+'">'+fmtT(tU)+'</b><small>Used</small></div><div class="stat"><b>'+fmtT(Math.max(0,tL-tU))+'</b><small>Remaining</small></div><div class="stat"><b>'+fmt(tR)+'</b><small>Requests</small></div>'+(tL>0?'<div class="stat"><b>'+Math.round(tU/tL*100)+'%</b><small>Usage</small></div>':'');
+
+var h='<table><tr><th>Key</th><th>Name</th><th>RPM</th><th>Now</th><th>Credits</th><th>Used</th><th>%</th><th>Status</th><th>Reqs</th><th>Actions</th></tr>';
+d.keys.forEach(k=>{
+var p=k.credits_limit>0?Math.round(k.credits_used/k.credits_limit*100):0;
+var c=p>90?'#f66':p>70?'#fc0':'#4f4';
+h+='<tr>';
+h+='<td style="cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent)">'+esc(k.key_preview)+'</td>';
+h+='<td><span class="clickable" onclick="showKeyDetail(\''+esc(k.key_preview)+'\')">'+esc(k.name)+'</span></td>';
+h+='<td>'+k.rpm_limit+'</td>';
+h+='<td style="color:'+(k.rpm_current>k.rpm_limit*0.8?'#f66':'#4f4')+'">'+k.rpm_current+'</td>';
+h+='<td>'+(k.credits_limit>0?fmtT(k.credits_limit):'∞')+'</td>';
+h+='<td>'+fmtT(k.credits_used)+'</td>';
+h+='<td>'+(k.credits_limit>0?'<div class="bar"><div class="fill" style="width:'+Math.min(100,p)+'%;background:'+c+'"></div></div>'+p+'%':'--')+'</td>';
+h+='<td><span class="badge '+(k.enabled?'on':'off')+'">'+(k.enabled?'ON':'OFF')+'</span></td>';
+h+='<td>'+fmt(k.stats?k.stats.requests:0)+'</td>';
+h+='<td>';
+h+='<button onclick="keyAction(\''+esc(k.key_preview)+'\',\'toggle\','+!k.enabled+')" style="font-size:11px">'+(k.enabled?'OFF':'ON')+'</button> ';
+h+='<button onclick="keyAction(\''+esc(k.key_preview)+'\',\'edit\')" style="font-size:11px">Edit</button> ';
+h+='<button onclick="keyAction(\''+esc(k.key_preview)+'\',\'reset\')" style="font-size:11px">Reset</button> ';
+h+='<button onclick="keyAction(\''+esc(k.key_preview)+'\',\'copy\')" style="font-size:11px">Copy</button> ';
+h+='<button onclick="keyAction(\''+esc(k.key_preview)+'\',\'delete\')" style="font-size:11px;color:#f66">Del</button>';
+h+='</td></tr>';
+});
+h+='</table>';document.getElementById('keysTable').innerHTML=h;});}
+
+// Resolve key preview -> full key, then perform action
+function keyAction(preview, action, extra){
+  api('GET','/admin/key-resolve/'+encodeURIComponent(preview)).then(d=>{
+    if(d.detail){alert(d.detail);return;}
+    var full=d.full_key;
+    if(action==='toggle'){
+      api('PUT','/admin/keys',{key:full,enabled:extra}).then(r=>{if(r.status==='updated')loadKeys();else alert(r.detail||'Error');});
+    }else if(action==='edit'){
+      var rpm=prompt('RPM:','45');
+      var cr=prompt('Credits limit (0=unlimited):','0');
+      var name=prompt('Name (leave empty to keep):','');
+      var b={key:full};
+      if(rpm)b.rpm=parseInt(rpm);
+      if(cr!==null)b.credits_limit=parseInt(cr);
+      if(name)b.name=name;
+      api('PUT','/admin/keys',b).then(r=>{if(r.status==='updated')loadKeys();else alert(r.detail||'Error');});
+    }else if(action==='reset'){
+      if(!confirm('Reset credits for this key?'))return;
+      api('PUT','/admin/keys',{key:full,credits_used:0}).then(r=>{if(r.status==='updated')loadKeys();else alert(r.detail||'Error');});
+    }else if(action==='copy'){
+      navigator.clipboard.writeText(full).then(()=>alert('Copied full key!'));
+    }else if(action==='delete'){
+      if(!confirm('DELETE this key permanently?'))return;
+      api('DELETE','/admin/keys/'+encodeURIComponent(full)).then(r=>{if(r.status==='deleted')loadKeys();else alert(r.detail||'Error');});
+    }
+  }).catch(e=>alert('Error: '+e));
+}
+
+// Show key detail modal with per-key logs
+function showKeyDetail(preview){
+  document.getElementById('keyModal').classList.add('open');
+  document.getElementById('modalTitle').textContent='Key: '+preview;
+  document.getElementById('modalKeyInfo').innerHTML='Loading...';
+  document.getElementById('modalKeyLogs').innerHTML='Loading...';
+
+  // Get key info
+  api('GET','/admin/key-resolve/'+encodeURIComponent(preview)).then(d=>{
+    if(d.detail){document.getElementById('modalKeyInfo').innerHTML='<span class="err">'+d.detail+'</span>';return;}
+    var full=d.full_key;
+    var ki=null;
+    api('GET','/admin/keys').then(kd=>{
+      kd.keys.forEach(k=>{if(k.key_preview===preview)ki=k;});
+      if(!ki){document.getElementById('modalKeyInfo').innerHTML='Key not found';return;}
+      var html='<div class="card">';
+      html+='<div class="stat"><b>'+esc(ki.name)+'</b><small>Name</small></div>';
+      html+='<div class="stat"><b>'+ki.rpm_limit+'</b><small>RPM limit</small></div>';
+      html+='<div class="stat"><b>'+(ki.credits_limit>0?fmtT(ki.credits_limit):'∞')+'</b><small>Credits</small></div>';
+      html+='<div class="stat"><b>'+fmtT(ki.credits_used)+'</b><small>Used</small></div>';
+      if(ki.credits_limit>0){
+        var p=Math.round(ki.credits_used/ki.credits_limit*100);
+        html+='<div class="stat"><b>'+fmtT(ki.credits_limit-ki.credits_used)+'</b><small>Remaining</small></div>';
+        html+='<div class="stat"><b>'+p+'%</b><small>Usage</small></div>';
+      }
+      html+='<div class="stat"><b>'+fmt(ki.stats?ki.stats.requests:0)+'</b><small>Requests</small></div>';
+      html+='<div class="stat"><b>'+fmtT(ki.stats?ki.stats.tokens_prompt:0)+'</b><small>Prompt tokens</small></div>';
+      html+='<div class="stat"><b>'+fmtT(ki.stats?ki.stats.tokens_completion:0)+'</b><small>Completion tokens</small></div>';
+      html+='<div class="stat"><b class="'+(ki.enabled?'ok':'err')+'">'+(ki.enabled?'Enabled':'Disabled')+'</b><small>Status</small></div>';
+      html+='</div>';
+      html+='<div style="margin-top:8px"><button onclick="navigator.clipboard.writeText(\''+esc(full)+'\')">Copy full key</button> ';
+      html+='<button onclick="keyAction(\''+esc(preview)+'\',\'edit\');closeModal()">Edit</button> ';
+      html+='<button onclick="keyAction(\''+esc(preview)+'\',\'reset\');closeModal()">Reset credits</button> ';
+      html+='<button onclick="keyAction(\''+esc(preview)+'\',\'delete\');closeModal()" style="color:#f66">Delete</button></div>';
+      document.getElementById('modalKeyInfo').innerHTML=html;
+    });
+  });
+
+  // Get per-key logs
+  api('GET','/admin/logs/key/'+encodeURIComponent(preview)+'?limit=50').then(d=>{
+    if(!d.logs||d.logs.length===0){document.getElementById('modalKeyLogs').innerHTML='<span class="muted">No requests yet</span>';return;}
+    var h='<table><tr><th>Time</th><th>Model</th><th>Prompt</th><th>Prompt tk</th><th>Compl tk</th><th>Total</th><th>ms</th><th>Account</th><th>Status</th></tr>';
+    d.logs.forEach(l=>{
+      var ts=l.ts?l.ts.substring(11,19):'';
+      h+='<tr>';
+      h+='<td class="muted">'+ts+'</td>';
+      h+='<td>'+esc(l.model)+'</td>';
+      h+='<td class="prompt-cell" title="'+esc(l.prompt_preview||'')+'">'+esc(l.prompt_preview||'—')+'</td>';
+      h+='<td>'+fmt(l.prompt_tokens)+'</td>';
+      h+='<td>'+fmt(l.completion_tokens)+'</td>';
+      h+='<td style="color:#fff;font-weight:bold">'+fmt(l.total_tokens||l.prompt_tokens+l.completion_tokens)+'</td>';
+      h+='<td>'+(l.duration_ms||0)+'</td>';
+      h+='<td class="muted">'+esc(l.account||'')+'</td>';
+      h+='<td class="'+(l.status==='ok'?'ok':'err')+'">'+l.status+'</td>';
+      h+='</tr>';
+    });
+    h+='</table>';
+    h+='<div class="muted" style="font-size:11px;margin-top:4px">Showing '+d.logs.length+' of '+d.total+' requests</div>';
+    document.getElementById('modalKeyLogs').innerHTML=h;
+  });
+}
+function closeModal(){document.getElementById('keyModal').classList.remove('open');}
+document.getElementById('keyModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+function loadAccounts(){api('GET','/admin/accounts').then(d=>{if(!d.accounts)return;var al=d.accounts.filter(a=>!a.is_dead).length;document.getElementById('accSummary').textContent=al+'/'+d.accounts.length+' alive';var h='<table><tr><th>#</th><th>Email</th><th>Status</th><th>Credits</th><th>Reqs</th><th>Tokens</th><th>Proxy</th></tr>';d.accounts.forEach((a,i)=>{h+='<tr><td class="muted">'+(i+1)+'</td><td class="muted">'+esc(a.email)+'</td><td><span class="badge '+(a.is_dead?'off':'on')+'">'+(a.is_dead?'DEAD':'OK')+'</span></td><td>'+a.credits_used+'/'+a.credits_limit+'</td><td>'+a.requests_total+'</td><td>'+fmtT(a.tokens_prompt+a.tokens_completion)+'</td><td class="muted">'+(a.proxy||'direct')+'</td></tr>';});h+='</table>';document.getElementById('accountsTable').innerHTML=h;});}
+
+function loadLogs(){api('GET','/admin/logs?limit=100').then(d=>{if(!d.logs)return;document.getElementById('logCount').textContent=d.logs.length+' entries';var h='<table><tr><th>Time</th><th>Model</th><th>Key</th><th>Prompt</th><th>In</th><th>Out</th><th>Total</th><th>ms</th><th>Status</th></tr>';d.logs.forEach(l=>{h+='<tr><td class="muted">'+(l.ts?l.ts.substring(11,19):'')+'</td><td>'+esc(l.model)+'</td><td class="muted clickable" onclick="showKeyDetail(\''+esc(l.key||'')+'\')">'+esc(l.key_name||'')+'</td><td class="prompt-cell" title="'+esc(l.prompt_preview||'')+'">'+esc((l.prompt_preview||'').substring(0,60))+'</td><td>'+l.prompt_tokens+'</td><td>'+l.completion_tokens+'</td><td style="color:#fff">'+fmt(l.total_tokens||l.prompt_tokens+l.completion_tokens)+'</td><td>'+(l.duration_ms||0)+'</td><td class="'+(l.status==='ok'?'ok':'err')+'">'+l.status+'</td></tr>';});h+='</table>';document.getElementById('logBox').innerHTML=h;});}
+
+function genKey(){var h='';for(var i=0;i<32;i++)h+='0123456789abcdef'[Math.random()*16|0];document.getElementById('nk').value='sk-scarlex-'+h;}
+function addKey(){var k=document.getElementById('nk').value.trim(),n=document.getElementById('nn').value.trim(),r=parseInt(document.getElementById('nr').value)||45,c=parseInt(document.getElementById('nc').value)||0;if(!k||!n){alert('Fill key+name');return;}api('POST','/admin/keys',{key:k,name:n,rpm:r,credits_limit:c}).then(d=>{if(d.status==='created'){document.getElementById('nk').value='';document.getElementById('nn').value='';loadKeys();}else alert(d.detail||'Error');});}
+
+function testChat(){var k=document.getElementById('testKey').value.trim(),m=document.getElementById('testMsg').value,md=document.getElementById('testModel').value;if(!k){alert('Enter API key');return;}document.getElementById('testResult').textContent='...';fetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:md,messages:[{role:'user',content:m}],stream:false})}).then(r=>r.json()).then(d=>{document.getElementById('testResult').textContent=JSON.stringify(d,null,2);loadLogs();}).catch(e=>{document.getElementById('testResult').textContent='Error: '+e;});}
+
+function fmt(n){return Number(n||0).toLocaleString();}
+function fmtT(n){n=n||0;if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n);}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+setInterval(function(){if(document.getElementById('app').style.display!=='none'){loadKeys();loadLogs();}},30000);
+</script>
+</body></html>

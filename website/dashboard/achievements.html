@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Достижения — Scarlex</title>
+<link rel="icon" href="/logo_nofon.png" type="image/png">
+<link rel="stylesheet" href="/dashboard.css?v=1786000000">
+<style>
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.ach{padding:18px;border-radius:14px;background:var(--d-card-bg);border:1px solid var(--d-border);position:relative;overflow:hidden}
+.ach.locked{opacity:.4}
+.ach .ico{font-size:32px;line-height:1;margin-bottom:10px}
+.ach .nm{font-weight:700;color:var(--d-white);font-size:14px;margin-bottom:4px}
+.ach .ds{color:var(--d-muted);font-size:12px;min-height:30px}
+.ach .pg{margin-top:10px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.ach .pg>span{display:block;height:100%;background:var(--d-white);transition:width .25s}
+.ach .tier{position:absolute;top:10px;right:12px;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--d-muted)}
+.ach.bronze .tier{color:#c08c5a}.ach.silver .tier{color:#c8c8c8}.ach.gold .tier{color:#f0c34d}.ach.platinum .tier{color:#7cd0ff}
+.ach .pct{font-size:11px;color:var(--d-muted);margin-top:6px}
+</style>
+</head>
+<body>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><div class="d-page-eyebrow">Аккаунт</div><h1 class="d-page-title">Достижения</h1>
+      <div class="d-page-sub">Бейджи за активность.</div></div>
+    <a id="dUserChip" href="/dashboard/profile.html" class="d-user-chip">👤 …</a>
+  </div>
+
+  <section class="d-card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div><h3>Прогресс</h3><div class="desc">Разблокировано: <b id="achCount">0</b> из <b id="achTotal">0</b></div></div>
+      <div style="min-width:240px;flex:1;max-width:380px"><div class="pg" style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden"><span id="achBar" style="display:block;height:100%;background:var(--d-white);width:0%"></span></div></div>
+    </div>
+  </section>
+
+  <div id="achBox" class="ach-grid"><div class="d-empty">Загрузка…</div></div>
+</main>
+<script src="/dashboard.js?v=1786000000"></script>
+<script>
+SCX.boot('achievements', function(){
+  SCX.api('/api/achievements.php?action=list').then(function(d){
+    if (!d || !d.ok) { document.getElementById('achBox').innerHTML = '<div class="d-empty">Ошибка загрузки</div>'; return; }
+    var list = d.achievements || [];
+    var unlocked = list.filter(function(a){ return a.unlocked; }).length;
+    document.getElementById('achCount').textContent = unlocked;
+    document.getElementById('achTotal').textContent = list.length;
+    document.getElementById('achBar').style.width = (list.length ? (unlocked/list.length*100).toFixed(0) : 0) + '%';
+    document.getElementById('achBox').innerHTML = list.map(function(a){
+      var pct = a.threshold ? Math.min(100, Math.round((a.progress||0)/a.threshold*100)) : (a.unlocked?100:0);
+      return '<div class="ach '+a.tier+(a.unlocked?'':' locked')+'">'
+        + '<div class="tier">'+a.tier+'</div>'
+        + '<div class="ico">'+SCX.escapeHtml(a.icon||'🏅')+'</div>'
+        + '<div class="nm">'+SCX.escapeHtml(a.name)+'</div>'
+        + '<div class="ds">'+SCX.escapeHtml(a.description)+'</div>'
+        + (a.threshold ? '<div class="pg"><span style="width:'+pct+'%"></span></div><div class="pct">'+(a.progress||0)+' / '+a.threshold+'</div>' : '')
+        + '</div>';
+    }).join('');
+  });
+});
+</script>
+</body></html>

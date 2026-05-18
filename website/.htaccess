@@ -1,0 +1,14 @@
+DirectoryIndex index.html index.php
+
+ErrorDocument 404 /404.html
+
+# Pretty URLs: /dashboard -> /dashboard.html
+RewriteEngine On
+
+# Admin-gated Kiro page: /kiro.html and /kiro -> /kiro.php
+RewriteRule ^kiro\.html$ /kiro.php [L]
+RewriteRule ^kiro$ /kiro.php [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^\.]+)$ $1.html [NC,L]
