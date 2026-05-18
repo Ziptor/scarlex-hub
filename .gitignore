@@ -32,12 +32,14 @@ kiro-form/_keys/
 scripts/
 
 # === Docs with hardcoded passwords (TODO: sanitize and re-track)
-AGENTS.md
-vps-proxy/AGENTS.md
 vps-proxy/DEPLOY.md
 vps-proxy/README.md
 vps-proxy/TODO_BOT.txt
 telegram-bot/DEPLOY.md
+
+# === Local secrets file (real values, never commit)
+secrets.local.md
+**/secrets.local.md
 
 # === One-off diagnostic scripts in vps-proxy/ with hardcoded SSH creds
 vps-proxy/check_*.py
