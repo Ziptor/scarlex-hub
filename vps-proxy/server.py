@@ -2238,6 +2238,166 @@ async def metrics_history_endpoint(
     return {"points": clean, "count": len(clean), "interval_sec": METRICS_INTERVAL}
 
 
+def _read_cpu_times() -> tuple[int, int]:
+    """Return (idle_jiffies, total_jiffies) parsed from /proc/stat first line.
+    Sampling two snapshots gives CPU utilisation %. Linux-only."""
+    with open("/proc/stat", "r", encoding="utf-8") as f:
+        parts = f.readline().split()
+    # parts[0] = "cpu", then user nice system idle iowait irq softirq steal …
+    vals = [int(p) for p in parts[1:8]]
+    idle = vals[3] + vals[4]  # idle + iowait
+    total = sum(vals)
+    return idle, total
+
+
+def _read_net_bytes(iface_hint: str = "") -> tuple[str, int, int]:
+    """Read cumulative RX/TX bytes for the active interface. Skips ``lo`` and
+    docker/veth interfaces. Returns (iface_name, rx, tx) — or ('', 0, 0) on
+    failure.
+    """
+    chosen = (iface_hint or "")
+    rx = tx = 0
+    candidates: list[tuple[str, int, int]] = []
+    try:
+        with open("/proc/net/dev", "r", encoding="utf-8") as f:
+            next(f); next(f)  # skip 2 header lines
+            for line in f:
+                if ":" not in line:
+                    continue
+                name, rest = line.split(":", 1)
+                name = name.strip()
+                if name == "lo" or name.startswith(("veth", "docker", "br-", "tun", "tap")):
+                    continue
+                cols = rest.split()
+                if len(cols) < 9:
+                    continue
+                rx_b = int(cols[0])
+                tx_b = int(cols[8])
+                candidates.append((name, rx_b, tx_b))
+    except Exception:
+        return ("", 0, 0)
+    if not candidates:
+        return ("", 0, 0)
+    # Prefer eth*/ens*/eno* with most traffic
+    candidates.sort(key=lambda x: (x[1] + x[2]), reverse=True)
+    chosen, rx, tx = candidates[0]
+    return chosen, rx, tx
+
+
+@app.get("/admin/system/metrics")
+def admin_system_metrics(authorization: Optional[str] = Header(None)):
+    """Linux-only snapshot of VPS resource usage. Linux ``/proc`` based, no
+    extra deps. Samples CPU and network over a brief window to compute deltas
+    (CPU %, bytes/sec). Total endpoint duration ≈ 0.5s.
+    """
+    verify_admin(authorization)
+    import os as _os
+    import time as _t
+
+    info: dict = {}
+
+    # Uptime (host)
+    try:
+        with open("/proc/uptime", "r") as f:
+            info["uptime_seconds"] = float(f.read().split()[0])
+    except Exception:
+        info["uptime_seconds"] = None
+
+    # Load average (1, 5, 15 min)
+    try:
+        with open("/proc/loadavg", "r") as f:
+            parts = f.read().split()
+        info["load_avg"] = {"1m": float(parts[0]), "5m": float(parts[1]), "15m": float(parts[2])}
+    except Exception:
+        info["load_avg"] = None
+
+    # CPU usage % — sample twice with 500ms gap
+    try:
+        i1, t1 = _read_cpu_times()
+        rx1 = tx1 = 0
+        iface1, rx1, tx1 = _read_net_bytes()
+        _t.sleep(0.5)
+        i2, t2 = _read_cpu_times()
+        iface2, rx2, tx2 = _read_net_bytes(iface1)
+        dt = max(1, t2 - t1)
+        cpu_busy = 1.0 - ((i2 - i1) / dt)
+        info["cpu"] = {
+            "count": _os.cpu_count() or 1,
+            "percent": round(max(0.0, min(100.0, cpu_busy * 100)), 1),
+        }
+        # network bytes/sec — sampled 0.5s window, so × 2
+        info["network"] = {
+            "interface": iface2 or iface1 or "",
+            "rx_bytes": rx2,
+            "tx_bytes": tx2,
+            "rx_bytes_per_sec": max(0, (rx2 - rx1)) * 2,
+            "tx_bytes_per_sec": max(0, (tx2 - tx1)) * 2,
+        }
+    except Exception as e:
+        info["cpu"] = {"count": _os.cpu_count() or 1, "percent": None, "error": str(e)}
+        info["network"] = None
+
+    # Memory (parse /proc/meminfo)
+    try:
+        mem: dict[str, int] = {}
+        with open("/proc/meminfo", "r") as f:
+            for line in f:
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    parts = v.strip().split()
+                    if parts and parts[0].isdigit():
+                        mem[k.strip()] = int(parts[0]) * 1024  # kB → bytes
+        total = mem.get("MemTotal", 0)
+        avail = mem.get("MemAvailable", mem.get("MemFree", 0))
+        used = total - avail
+        info["memory"] = {
+            "total": total,
+            "used": used,
+            "available": avail,
+            "percent": round((used / total) * 100, 1) if total else None,
+            "swap_total": mem.get("SwapTotal", 0),
+            "swap_used": mem.get("SwapTotal", 0) - mem.get("SwapFree", 0),
+        }
+    except Exception:
+        info["memory"] = None
+
+    # Disk (root filesystem)
+    try:
+        st = _os.statvfs("/")
+        total = st.f_blocks * st.f_frsize
+        avail = st.f_bavail * st.f_frsize
+        used = total - avail
+        info["disk"] = {
+            "mount": "/",
+            "total": total,
+            "used": used,
+            "available": avail,
+            "percent": round((used / total) * 100, 1) if total else None,
+        }
+    except Exception:
+        info["disk"] = None
+
+    # Process self (kiro-proxy worker)
+    try:
+        with open(f"/proc/{_os.getpid()}/status", "r") as f:
+            proc_status = {}
+            for line in f:
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    proc_status[k.strip()] = v.strip()
+        rss_kb = int((proc_status.get("VmRSS") or "0 kB").split()[0])
+        info["process"] = {
+            "pid": _os.getpid(),
+            "rss_bytes": rss_kb * 1024,
+            "threads": int(proc_status.get("Threads", 0) or 0),
+        }
+    except Exception:
+        info["process"] = None
+
+    info["_ts"] = int(_t.time())
+    return info
+
+
 # РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚
 # Admin API РІР‚вЂќ РЎС“Р С—РЎР‚Р В°Р Р†Р В»Р ВµР Р…Р С‘Р Вµ Р С”Р В»РЎР‹РЎвЂЎР В°Р СР С‘
 # РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚РІвЂќР‚

@@ -97,6 +97,45 @@
       fetch('/api/auth.php', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'logout'}) })
         .then(function(){ location.href = '/authorization.html'; });
     });
+
+    // ── Mobile: burger + backdrop ──
+    if (!document.getElementById('dBackdrop')) {
+      var bd = document.createElement('div');
+      bd.id = 'dBackdrop';
+      bd.className = 'd-backdrop';
+      document.body.appendChild(bd);
+      bd.addEventListener('click', function(){ sb.classList.remove('is-open'); bd.classList.remove('show'); });
+    }
+    // Close sidebar on any nav-link tap inside it (mobile UX)
+    sb.querySelectorAll('.d-nav-item').forEach(function(a){
+      a.addEventListener('click', function(){
+        if (window.matchMedia('(max-width:920px)').matches) {
+          sb.classList.remove('is-open');
+          var bd2 = document.getElementById('dBackdrop'); if (bd2) bd2.classList.remove('show');
+        }
+      });
+    });
+    // Burger lives inside the topbar of each page — wire any present
+    document.querySelectorAll('.d-mobile-burger').forEach(function(b){
+      if (b.dataset._wired) return; b.dataset._wired = '1';
+      b.addEventListener('click', function(){
+        sb.classList.toggle('is-open');
+        var bd3 = document.getElementById('dBackdrop'); if (bd3) bd3.classList.toggle('show', sb.classList.contains('is-open'));
+      });
+    });
+    // If a page didn't include its own burger, inject one into the first .d-topbar.
+    var firstBar = document.querySelector('.d-topbar');
+    if (firstBar && !firstBar.querySelector('.d-mobile-burger')) {
+      var bt = document.createElement('button');
+      bt.className = 'd-mobile-burger';
+      bt.setAttribute('aria-label', 'Меню');
+      bt.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>';
+      bt.addEventListener('click', function(){
+        sb.classList.toggle('is-open');
+        var bd4 = document.getElementById('dBackdrop'); if (bd4) bd4.classList.toggle('show', sb.classList.contains('is-open'));
+      });
+      firstBar.insertBefore(bt, firstBar.firstChild);
+    }
   };
 
   // ── Preview mode: ?preview=1 (или localStorage scx_preview) — мокаем API без логина ──
