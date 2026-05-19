@@ -309,6 +309,46 @@ pre{background:var(--sf);padding:14px;border-radius:10px;overflow-x:auto;font:13
   <div class="g" id="upstreamStats"></div>
 </div>
 
+<!-- VPS system load -->
+<div style="margin-bottom:20px">
+  <div class="row" style="margin-bottom:8px">
+    <b style="color:#fff">Нагрузка VPS</b>
+    <span id="sysLoadTs" style="color:var(--tm);margin-left:8px;font-size:.78rem"></span>
+  </div>
+  <div id="sysLoadCards" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
+    <div class="sc" style="padding:12px">
+      <div class="sl">CPU</div>
+      <div id="sysCpu" style="font-size:1.4rem;font-weight:700;color:#fff">—</div>
+      <div id="sysCpuSub" style="color:var(--tm);font-size:.72rem">—</div>
+    </div>
+    <div class="sc" style="padding:12px">
+      <div class="sl">RAM</div>
+      <div id="sysMem" style="font-size:1.4rem;font-weight:700;color:#fff">—</div>
+      <div id="sysMemSub" style="color:var(--tm);font-size:.72rem">—</div>
+    </div>
+    <div class="sc" style="padding:12px">
+      <div class="sl">Диск /</div>
+      <div id="sysDisk" style="font-size:1.4rem;font-weight:700;color:#fff">—</div>
+      <div id="sysDiskSub" style="color:var(--tm);font-size:.72rem">—</div>
+    </div>
+    <div class="sc" style="padding:12px">
+      <div class="sl">Сеть ↓</div>
+      <div id="sysNetRx" style="font-size:1.4rem;font-weight:700;color:#fff">—</div>
+      <div id="sysNetRxSub" style="color:var(--tm);font-size:.72rem">—</div>
+    </div>
+    <div class="sc" style="padding:12px">
+      <div class="sl">Сеть ↑</div>
+      <div id="sysNetTx" style="font-size:1.4rem;font-weight:700;color:#fff">—</div>
+      <div id="sysNetTxSub" style="color:var(--tm);font-size:.72rem">—</div>
+    </div>
+    <div class="sc" style="padding:12px">
+      <div class="sl">Load avg</div>
+      <div id="sysLoad" style="font-size:1.4rem;font-weight:700;color:#fff">—</div>
+      <div id="sysLoadSub" style="color:var(--tm);font-size:.72rem">—</div>
+    </div>
+  </div>
+</div>
+
 <!-- Charts -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
   <div class="sc" style="padding:12px">
@@ -1536,6 +1576,9 @@ function loadUpstream(){
     statsEl.innerHTML=sc('Статус','ОФФЛАЙН','err')+sc('Задержка','Таймаут','err');
   });
 
+  // 1b. System load (CPU / RAM / disk / network)
+  loadSysMetrics();
+
   // 2. Accounts with health details
   vps('GET','/admin/accounts').then(function(d){
     if(!d||!d.accounts){accEl.innerHTML='<span style="color:var(--tm)">Не удалось загрузить</span>';return;}
@@ -1614,6 +1657,85 @@ setInterval(function(){
 
 // Replace old 30s interval
 // (removed setInterval at bottom — replaced with unified interval above)
+
+// ── VPS system load (CPU/RAM/disk/network) ──────────────
+function fmtBytes(n) {
+  n = +n || 0;
+  if (n >= 1024*1024*1024) return (n/1024/1024/1024).toFixed(1) + ' GB';
+  if (n >= 1024*1024)      return (n/1024/1024).toFixed(1) + ' MB';
+  if (n >= 1024)           return (n/1024).toFixed(0) + ' KB';
+  return n + ' B';
+}
+function fmtBps(n) { return fmtBytes(n) + '/s'; }
+function pctColor(p) {
+  if (p === null || p === undefined) return '#fff';
+  if (p >= 90) return 'var(--err)';
+  if (p >= 70) return 'var(--warn)';
+  return 'var(--ok)';
+}
+function loadSysMetrics() {
+  vps('GET', '/admin/system/metrics').then(function(d) {
+    if (!d || d.detail) return;
+    // CPU
+    var cpu = d.cpu || {};
+    if (cpu.percent !== null && cpu.percent !== undefined) {
+      var el = document.getElementById('sysCpu');
+      el.textContent = cpu.percent + '%';
+      el.style.color = pctColor(cpu.percent);
+      document.getElementById('sysCpuSub').textContent = (cpu.count || '?') + ' ядер';
+    }
+    // RAM
+    var mem = d.memory || {};
+    if (mem.percent !== null && mem.percent !== undefined) {
+      var el2 = document.getElementById('sysMem');
+      el2.textContent = mem.percent + '%';
+      el2.style.color = pctColor(mem.percent);
+      document.getElementById('sysMemSub').textContent =
+        fmtBytes(mem.used) + ' / ' + fmtBytes(mem.total);
+    }
+    // Disk
+    var disk = d.disk || {};
+    if (disk.percent !== null && disk.percent !== undefined) {
+      var el3 = document.getElementById('sysDisk');
+      el3.textContent = disk.percent + '%';
+      el3.style.color = pctColor(disk.percent);
+      document.getElementById('sysDiskSub').textContent =
+        fmtBytes(disk.used) + ' / ' + fmtBytes(disk.total);
+    }
+    // Network
+    var net = d.network || {};
+    document.getElementById('sysNetRx').textContent = fmtBps(net.rx_bytes_per_sec || 0);
+    document.getElementById('sysNetRxSub').textContent = fmtBytes(net.rx_bytes || 0) + ' всего';
+    document.getElementById('sysNetTx').textContent = fmtBps(net.tx_bytes_per_sec || 0);
+    document.getElementById('sysNetTxSub').textContent = fmtBytes(net.tx_bytes || 0) + ' всего';
+    // Load avg
+    var la = d.load_avg || {};
+    if (la['1m'] !== undefined) {
+      var loadEl = document.getElementById('sysLoad');
+      var nc = (cpu.count || 1);
+      var ratio = la['1m'] / nc;
+      loadEl.textContent = la['1m'].toFixed(2);
+      loadEl.style.color = ratio >= 1.0 ? 'var(--err)' : ratio >= 0.7 ? 'var(--warn)' : 'var(--ok)';
+      document.getElementById('sysLoadSub').textContent =
+        '5м: ' + (la['5m'] || 0).toFixed(2) + '  15м: ' + (la['15m'] || 0).toFixed(2);
+    }
+    // Uptime + process info as a footer line
+    var ts = document.getElementById('sysLoadTs');
+    var ut = '';
+    if (d.uptime_seconds) {
+      var s = d.uptime_seconds;
+      var days = Math.floor(s/86400); s -= days*86400;
+      var hours = Math.floor(s/3600); s -= hours*3600;
+      var mins = Math.floor(s/60);
+      ut = 'аптайм ' + (days ? days+'д ' : '') + hours+'ч '+mins+'м';
+    }
+    var procRss = (d.process && d.process.rss_bytes) ? ('  · proxy RSS ' + fmtBytes(d.process.rss_bytes)) : '';
+    var iface = (net.interface) ? ('  · ' + net.interface) : '';
+    ts.textContent = ut + procRss + iface;
+  }).catch(function() {
+    document.getElementById('sysLoadTs').textContent = 'ошибка загрузки';
+  });
+}
 
 // ── Chart drawing ────────────────────────────────────────
 
