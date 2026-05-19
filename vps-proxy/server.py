@@ -28,14 +28,14 @@ import sqlite3
 import threading
 import concurrent.futures
 from pathlib import Path
-from typing import Optional, Union, Literal, Annotated
+from typing import Any, Optional, Union, Literal, Annotated
 from datetime import datetime, timezone
 from collections import deque
 
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import uvicorn
 
 from kiro_core import KiroFarmBot
@@ -1199,10 +1199,44 @@ class ToolCall(BaseModel):
 
 
 class ChatMessage(BaseModel):
+    """OpenAI Chat Completions message.
+
+    ``content`` accepts either:
+      - a plain string (canonical OpenAI form), or
+      - a list of content blocks like ``[{"type":"text","text":"..."}]``
+        which Cline / new Anthropic-SDK clients send when they treat the
+        endpoint as Anthropic-compatible. We flatten the list to a string
+        in the field validator so the rest of the pipeline sees a normal
+        string regardless of caller dialect.
+    """
     role: str
-    content: Optional[str] = None
+    content: Optional[Any] = None
     tool_calls: Optional[list[ToolCall]] = None
     tool_call_id: Optional[str] = None
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def _flatten_content(cls, v):
+        # Pass through None and plain strings unchanged.
+        if v is None or isinstance(v, str):
+            return v
+        # List of content blocks (Anthropic-style): join the .text fields.
+        if isinstance(v, list):
+            parts: list[str] = []
+            for block in v:
+                if isinstance(block, str):
+                    parts.append(block)
+                elif isinstance(block, dict):
+                    t = block.get("type")
+                    if t in ("text", None) and "text" in block:
+                        parts.append(str(block.get("text") or ""))
+                    elif t == "input_text" and "text" in block:  # OpenAI Responses dialect
+                        parts.append(str(block.get("text") or ""))
+                    # tool_use / tool_result / image blocks → ignored here;
+                    # tools are handled separately via ChatCompletionRequest.tools
+            return "\n".join(p for p in parts if p)
+        # Anything else (dict, int, …) — best-effort cast.
+        return str(v)
 
 
 class ChatCompletionRequest(BaseModel):
